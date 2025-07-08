@@ -101,3 +101,55 @@ export const getLatestPrediction = async (req: Request, res: Response, next: Nex
     next(error);
   }
 };
+
+export const getUserPredictionHistory = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // 認証必須
+    if (!req.user) {
+      res.status(401).json({
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Authentication required',
+        },
+      });
+      return;
+    }
+
+    const { page = 1, limit = 10, type, winOnly } = req.query;
+    
+    const query: any = {};
+    
+    // フィルタリング条件を構築
+    if (type === 'dataLogic') {
+      query['predictions.dataLogic'] = { $exists: true, $ne: [] };
+      query['predictions.ai'] = { $size: 0 };
+    } else if (type === 'ai') {
+      query['predictions.ai'] = { $exists: true, $ne: [] };
+      query['predictions.dataLogic'] = { $size: 0 };
+    }
+    
+    if (winOnly === 'true') {
+      query['result.isWin'] = true;
+    }
+
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+
+    const result = await predictionService.getUserPredictionHistory(
+      req.user._id.toString(),
+      query,
+      pageNum,
+      limitNum
+    );
+
+    log.info('User prediction history viewed', { 
+      userId: req.user._id,
+      page: pageNum,
+      total: result.totalPages,
+    });
+
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};

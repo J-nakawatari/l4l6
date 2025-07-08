@@ -250,4 +250,98 @@ export class PredictionService {
       aiHitRate: totalPredictions > 0 ? (aiHits / totalPredictions) * 100 : 0,
     };
   }
+
+  async getUserPredictionHistory(userId: string, query: any, page: number, limit: number) {
+    // ユーザーの予想結果を取得
+    const filter: any = { userId };
+
+    // フィルタリング条件の適用
+    if (query['predictions.dataLogic']) {
+      // データロジックのみの予想
+      const predictions = await Prediction.find({
+        _id: { $in: await PredictionResult.find({ userId }).distinct('predictionId') },
+        dataLogicPredictions: { $exists: true, $ne: [] },
+        aiPredictions: { $size: 0 },
+      });
+      filter.predictionId = { $in: predictions.map(p => p._id) };
+    } else if (query['predictions.ai']) {
+      // AIのみの予想
+      const predictions = await Prediction.find({
+        _id: { $in: await PredictionResult.find({ userId }).distinct('predictionId') },
+        aiPredictions: { $exists: true, $ne: [] },
+        dataLogicPredictions: { $size: 0 },
+      });
+      filter.predictionId = { $in: predictions.map(p => p._id) };
+    }
+
+    if (query['result.isWin']) {
+      filter.$or = [
+        { 'hits.dataLogic.0': { $exists: true } },
+        { 'hits.ai.0': { $exists: true } }
+      ];
+    }
+
+    const total = await PredictionResult.countDocuments(filter);
+    const totalPages = Math.ceil(total / limit);
+
+    const results = await PredictionResult.find(filter)
+      .sort('-createdAt')
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .populate('predictionId');
+
+    // 各結果に詳細情報を追加
+    const predictionsWithDetails = await Promise.all(
+      results.map(async (result) => {
+        const prediction = result.predictionId as any;
+        const drawResult = await DrawResult.findOne({ drawNumber: prediction.drawNumber });
+
+        return {
+          _id: result._id,
+          drawNumber: prediction.drawNumber,
+          predictions: {
+            dataLogic: prediction.dataLogicPredictions || [],
+            ai: prediction.aiPredictions || [],
+          },
+          result: drawResult ? {
+            winning: drawResult.winningNumber,
+            isWin: result.hits.dataLogic.length > 0 || result.hits.ai.length > 0,
+            prize: result.prizeWon,
+          } : undefined,
+          createdAt: prediction.createdAt,
+          analysis: {
+            dataLogic: prediction.dataLogicPredictions?.length > 0 ? {
+              frequency: await this.calculateFrequency(prediction.drawNumber),
+              patterns: await this.detectPatterns(prediction.drawNumber),
+            } : undefined,
+            ai: prediction.aiPredictions?.length > 0 ? {
+              confidence: 0.75 + Math.random() * 0.2, // 仮の値
+              features: ['高頻度数字', '過去当選パターン'], // 仮の値
+            } : undefined,
+          },
+        };
+      })
+    );
+
+    return {
+      predictions: predictionsWithDetails,
+      totalPages,
+      currentPage: page,
+    };
+  }
+
+  private async calculateFrequency(_drawNumber: number): Promise<Record<string, number>> {
+    // 簡略化された頻度計算（実際の実装では過去のデータから計算）
+    const frequency: Record<string, number> = {};
+    for (let i = 0; i <= 9; i++) {
+      frequency[i.toString()] = Math.floor(Math.random() * 20) + 30; // 30-50%の範囲
+    }
+    return frequency;
+  }
+
+  private async detectPatterns(_drawNumber: number): Promise<string[]> {
+    // 簡略化されたパターン検出（実際の実装では過去のデータから分析）
+    const patterns = ['連続数字', '偶数多め', '高頻度数字', '過去当選パターン'];
+    return patterns.slice(0, Math.floor(Math.random() * 3) + 1);
+  }
 }
