@@ -111,8 +111,8 @@ router.get('/history-with-prediction', authenticate, async (req: Request, res: R
         kakoPrediction,
         patterns,
         patternCount: patterns.length,
-        purchaseCount: 1, // 1口購入
-        purchaseAmount: 200, // 1口200円
+        purchaseCount: patterns.length, // パターン数分購入
+        purchaseAmount: patterns.length * 200, // パターン数 × 200円
         winType,
         winAmount,
         prizeInfo: currentDraw.prize
@@ -125,6 +125,103 @@ router.get('/history-with-prediction', authenticate, async (req: Request, res: R
     console.error('Error fetching draw history:', error);
     res.status(500).json({ 
       error: 'Failed to fetch draw history',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * 期間指定でkako予想結果を取得
+ */
+router.get('/history-with-prediction-period', authenticate, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const startDate = req.query.startDate as string;
+    const endDate = req.query.endDate as string;
+    
+    if (!startDate || !endDate) {
+      res.status(400).json({ error: 'startDate and endDate are required' });
+      return;
+    }
+
+    // 期間内の抽選結果を取得
+    const periodResults = await DrawResult.find({
+      drawDate: {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      }
+    }).sort({ drawNumber: 1 }); // 古い順
+
+    if (periodResults.length === 0) {
+      res.json({ results: [] });
+      return;
+    }
+
+    const results = [];
+
+    // 各回について予想を生成
+    for (const currentDraw of periodResults) {
+      // この回より100回前のデータを取得
+      const past100 = await DrawResult.find({
+        drawNumber: {
+          $gte: currentDraw.drawNumber - 100,
+          $lt: currentDraw.drawNumber
+        }
+      }).sort({ drawNumber: -1 }).limit(100);
+
+      if (past100.length < 100) {
+        // 100回分のデータがない場合はスキップ
+        continue;
+      }
+
+      // Kako予想を生成
+      const kakoPrediction = generateKakoPrediction(past100);
+
+      if (!kakoPrediction) continue;
+
+      // 並び替えパターンを生成
+      const patterns = generatePermutations(kakoPrediction.split(''));
+
+      // 当選チェック
+      let winType: 'straight' | 'box' | null = null;
+      let winAmount = 0;
+
+      if (currentDraw.winningNumber === kakoPrediction) {
+        winType = 'straight';
+        winAmount = 900000; // デフォルト値
+      } else if (patterns.includes(currentDraw.winningNumber)) {
+        winType = 'box';
+        winAmount = 37500; // デフォルト値
+      }
+
+      // 曜日を計算
+      const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][currentDraw.drawDate.getDay()];
+
+      results.push({
+        drawNumber: currentDraw.drawNumber,
+        drawDate: currentDraw.drawDate,
+        dayOfWeek,
+        winningNumber: currentDraw.winningNumber,
+        kakoPrediction,
+        patterns,
+        patternCount: patterns.length,
+        purchaseCount: patterns.length, // パターン数分購入
+        purchaseAmount: patterns.length * 200, // パターン数 × 200円
+        winType,
+        winAmount,
+        prizeInfo: currentDraw.prize
+      });
+    }
+
+    res.json({ 
+      results,
+      totalCount: results.length,
+      period: { startDate, endDate }
+    });
+
+  } catch (error) {
+    console.error('Error fetching period prediction history:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch period prediction history',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
