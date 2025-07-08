@@ -49,6 +49,27 @@ const PLANS = {
   },
 };
 
+// 価格情報取得
+router.get('/price-info/:priceId', async (req, res): Promise<void> => {
+  try {
+    const { priceId } = req.params;
+    
+    const price = await getStripe().prices.retrieve(priceId, {
+      expand: ['product']
+    });
+    
+    res.json({
+      amount: price.unit_amount,
+      currency: price.currency,
+      interval: price.recurring?.interval,
+      product: price.product
+    });
+  } catch (error) {
+    console.error('Failed to retrieve price:', error);
+    res.status(500).json({ error: 'Failed to retrieve price information' });
+  }
+});
+
 // チェックアウトセッション作成
 router.post('/create-checkout-session', authMiddleware, async (req: any, res): Promise<void> => {
   try {

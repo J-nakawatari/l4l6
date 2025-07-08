@@ -40,6 +40,7 @@ export default function DashboardPage() {
   const [latestPrediction, setLatestPrediction] = useState<Prediction | null>(null);
   const [predictionHistory, setPredictionHistory] = useState<PredictionHistory[]>([]);
   const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
+  const [subscriptionPrice, setSubscriptionPrice] = useState<string>('1,980');
   
   const currentYear = new Date().getFullYear();
   const currentYearHistory = predictionHistory.filter(h => 
@@ -48,7 +49,25 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchDashboardData();
+    fetchPriceInfo();
   }, []);
+
+  const fetchPriceInfo = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/payments/price-info/price_1RieIg1qmMqgQ3qQ4PbwxTfq`
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.amount) {
+          setSubscriptionPrice(data.amount.toLocaleString());
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch price info:', error);
+    }
+  };
 
   const handleSubscribe = async () => {
     setIsProcessingCheckout(true);
@@ -296,7 +315,7 @@ export default function DashboardPage() {
                   disabled={isProcessingCheckout}
                   className="btn btn-md btn-primary"
                 >
-                  {isProcessingCheckout ? '処理中...' : 'サブスク加入（月額1,980円）'}
+                  {isProcessingCheckout ? '処理中...' : `サブスク加入（月額${subscriptionPrice}円）`}
                 </button>
               </div>
             </div>
