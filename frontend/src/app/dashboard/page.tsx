@@ -306,17 +306,18 @@ export default function DashboardPage() {
         {/* 過去の予想結果セクション */}
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">過去の予想結果</h2>
-            <select className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800">
-              <option>すべて</option>
-              <option>当選のみ</option>
-              <option>最近30日</option>
-            </select>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">過去の予想結果（過去10回分）</h2>
+            <button
+              onClick={() => router.push('/predictions')}
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium hover:underline"
+            >
+              予想一覧へ
+            </button>
           </div>
           
           {predictionHistory && predictionHistory.length > 0 ? (
             <div className="space-y-4">
-              {predictionHistory.slice(0, 5).map((history) => (
+              {predictionHistory.slice(0, 10).map((history) => (
                 <div
                   key={history.drawNumber}
                   className="card p-6 hover:shadow-lg transition-shadow"
