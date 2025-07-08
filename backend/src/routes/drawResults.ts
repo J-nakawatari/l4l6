@@ -518,7 +518,7 @@ router.get('/history-with-ai-random-period', authenticate, async (req: Request, 
           winAmount
         });
 
-        totalPurchaseAmount += patterns.length * 200; // 各予想のパターン数 × 200円
+        totalPurchaseAmount += 200; // 各予想1口 × 200円
         totalWinAmount += winAmount;
       }
 
