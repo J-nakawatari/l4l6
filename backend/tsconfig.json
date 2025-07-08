@@ -31,5 +31,5 @@
     "typeRoots": ["./node_modules/@types", "./src/@types"]
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "tests", "src/scripts", "src/services/prediction/kakoPrediction.ts"]
+  "exclude": ["node_modules", "dist", "tests", "src/scripts"]
 }

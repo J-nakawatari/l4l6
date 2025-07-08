@@ -30,7 +30,9 @@ export async function generateKakoPredictions(): Promise<string[]> {
       
       for (let i = 0; i < 4; i++) {
         const digit = number[3 - i]; // 右から数える（1の位から）
-        digitFrequency[i][digit] = (digitFrequency[i][digit] || 0) + 1;
+        if (digitFrequency[i] && digit) {
+          digitFrequency[i]![digit] = (digitFrequency[i]![digit] || 0) + 1;
+        }
       }
     });
 
@@ -51,8 +53,8 @@ export async function generateKakoPredictions(): Promise<string[]> {
 
     // 基本予想（最頻出数字の組み合わせ）
     // 1の位から順に並べる（2, 5, 7, 9 → 2579）
-    const basePrediction = mostFrequentDigits[0] + mostFrequentDigits[1] + 
-                          mostFrequentDigits[2] + mostFrequentDigits[3];
+    const basePrediction = (mostFrequentDigits[0] || '0') + (mostFrequentDigits[1] || '0') + 
+                          (mostFrequentDigits[2] || '0') + (mostFrequentDigits[3] || '0');
 
     // 予想結果を生成（並び替えパターン）
     const predictions: Set<string> = new Set();
@@ -65,19 +67,19 @@ export async function generateKakoPredictions(): Promise<string[]> {
       const sorted = Object.entries(freq)
         .sort(([, a], [, b]) => b - a);
       
-      return sorted.length > 1 ? sorted[1][0] : sorted[0][0];
+      return sorted.length > 1 ? sorted[1]![0] : sorted[0]![0];
     });
 
     // 3. 最頻出と2番目の組み合わせパターンを生成
     for (let i = 0; i < 4; i++) {
       const pattern = [...mostFrequentDigits];
-      pattern[i] = secondFrequentDigits[i];
-      predictions.add(pattern[0] + pattern[1] + pattern[2] + pattern[3]);
+      pattern[i] = secondFrequentDigits[i] || '0';
+      predictions.add((pattern[0] || '0') + (pattern[1] || '0') + (pattern[2] || '0') + (pattern[3] || '0'));
     }
 
     // 4. 順列の一部を生成（最大10個まで）
-    const digits = [mostFrequentDigits[0], mostFrequentDigits[1], 
-                   mostFrequentDigits[2], mostFrequentDigits[3]];
+    const digits = [mostFrequentDigits[0] || '0', mostFrequentDigits[1] || '0', 
+                   mostFrequentDigits[2] || '0', mostFrequentDigits[3] || '0'];
     
     // 重複を除いた数字の配列
     const uniqueDigits = [...new Set(digits)];
@@ -89,13 +91,13 @@ export async function generateKakoPredictions(): Promise<string[]> {
       // 重複がある場合は、2番目に多い数字を混ぜて予想を生成
       for (let i = 0; i < 4 && predictions.size < 10; i++) {
         const mixed = [...mostFrequentDigits];
-        mixed[i] = secondFrequentDigits[i];
+        mixed[i] = secondFrequentDigits[i] || '0';
         
         // 位置を入れ替えたパターンも追加
         for (let j = 0; j < 4 && predictions.size < 10; j++) {
           if (i !== j) {
-            [mixed[i], mixed[j]] = [mixed[j], mixed[i]];
-            predictions.add(mixed[0] + mixed[1] + mixed[2] + mixed[3]);
+            [mixed[i], mixed[j]] = [mixed[j] || '0', mixed[i] || '0'];
+            predictions.add((mixed[0] || '0') + (mixed[1] || '0') + (mixed[2] || '0') + (mixed[3] || '0'));
           }
         }
       }
@@ -150,7 +152,9 @@ export async function getKakoAnalysis(): Promise<{
     
     for (let i = 0; i < 4; i++) {
       const digit = number[3 - i];
-      digitFrequency[i][digit] = (digitFrequency[i][digit] || 0) + 1;
+      if (digitFrequency[i] && digit) {
+        digitFrequency[i]![digit] = (digitFrequency[i]![digit] || 0) + 1;
+      }
     }
   });
 
