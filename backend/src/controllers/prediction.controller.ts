@@ -76,11 +76,13 @@ export const getLatestPrediction = async (req: AuthenticatedRequest, res: Respon
 
     // サブスクリプション確認
     const hasActiveSubscription = req.user.subscription?.status === 'active' && 
+      req.user.subscription.currentPeriodEnd !== undefined &&
       new Date(req.user.subscription.currentPeriodEnd) > new Date();
     
     // 期限切れチェック
     if (req.user.subscription?.status === 'active' && 
-        req.user.subscription.currentPeriodEnd < new Date()) {
+        req.user.subscription.currentPeriodEnd !== undefined &&
+        new Date(req.user.subscription.currentPeriodEnd) < new Date()) {
       res.status(403).json({
         error: {
           code: 'SUBSCRIPTION_EXPIRED',
@@ -137,7 +139,7 @@ export const getUserPredictionHistory = async (req: AuthenticatedRequest, res: R
     const limitNum = parseInt(limit as string, 10);
 
     const result = await predictionService.getUserPredictionHistory(
-      req.user._id.toString(),
+      req.user._id?.toString() || req.user.id as string,
       query,
       pageNum,
       limitNum
