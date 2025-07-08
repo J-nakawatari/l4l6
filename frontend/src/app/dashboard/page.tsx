@@ -40,6 +40,11 @@ export default function DashboardPage() {
   const [latestPrediction, setLatestPrediction] = useState<Prediction | null>(null);
   const [predictionHistory, setPredictionHistory] = useState<PredictionHistory[]>([]);
   const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
+  
+  const currentYear = new Date().getFullYear();
+  const currentYearHistory = predictionHistory.filter(h => 
+    new Date(h.createdAt).getFullYear() === currentYear
+  );
 
   useEffect(() => {
     fetchDashboardData();
@@ -155,7 +160,7 @@ export default function DashboardPage() {
         {/* ヘッダー */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">ダッシュボード</h1>
-          <p className="text-gray-600 dark:text-gray-400">今日の予想と統計情報</p>
+          <p className="text-gray-600 dark:text-gray-400">{currentYear}年の予想と統計情報</p>
         </div>
 
         {/* 統計カード */}
@@ -168,7 +173,7 @@ export default function DashboardPage() {
                 </svg>
               </div>
             </div>
-            <p className="stats-value">{predictionHistory.length}</p>
+            <p className="stats-value">{currentYearHistory.length}</p>
             <p className="stats-label">予想回数</p>
           </div>
 
@@ -180,7 +185,7 @@ export default function DashboardPage() {
                 </svg>
               </div>
             </div>
-            <p className="stats-value">{predictionHistory.filter(h => h.result?.isWin).length}</p>
+            <p className="stats-value">{currentYearHistory.filter(h => h.result?.isWin).length}</p>
             <p className="stats-label">当選回数</p>
           </div>
 
@@ -193,7 +198,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <p className="stats-value">
-              {predictionHistory.reduce((sum, h) => sum + (h.result?.isWin ? h.result.prize : 0), 0).toLocaleString()}
+              {currentYearHistory.reduce((sum, h) => sum + (h.result?.isWin ? h.result.prize : 0), 0).toLocaleString()}
             </p>
             <p className="stats-label">獲得賞金（円）</p>
           </div>
@@ -207,8 +212,8 @@ export default function DashboardPage() {
               </div>
             </div>
             <p className="stats-value">
-              {predictionHistory.length > 0 
-                ? Math.round((predictionHistory.filter(h => h.result?.isWin).length / predictionHistory.length) * 100)
+              {currentYearHistory.length > 0 
+                ? Math.round((currentYearHistory.filter(h => h.result?.isWin).length / currentYearHistory.length) * 100)
                 : 0}%
             </p>
             <p className="stats-label">的中率</p>
@@ -217,14 +222,8 @@ export default function DashboardPage() {
 
         {/* 次回予想セクション */}
         <section className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">次回予想</h2>
-            <button 
-              onClick={() => router.push('/predictions')}
-              className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-            >
-              すべて見る →
-            </button>
           </div>
           
           {isPremium && latestPrediction ? (
@@ -274,16 +273,10 @@ export default function DashboardPage() {
                 </div>
               </div>
               
-              <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   生成日時: {new Date(latestPrediction.createdAt).toLocaleString('ja-JP')}
                 </p>
-                <button 
-                  onClick={() => router.push('/predictions')}
-                  className="btn btn-sm btn-primary"
-                >
-                  詳細を見る
-                </button>
               </div>
             </div>
           ) : (
