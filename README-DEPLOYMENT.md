@@ -113,12 +113,37 @@ git checkout [前のコミットハッシュ]
 ./scripts/quick-deploy.sh
 ```
 
-## 自動デプロイの設定（オプション）
+## 自動デプロイの設定
 
-GitHubのWebhookを使用した自動デプロイも可能です：
+### 方法1: Git Hook（簡単・推奨）
+`git pull`実行時に自動的にデプロイを実行します。
 
-1. Webhookエンドポイントの設定
-2. GitHub Secretsの設定
-3. systemdサービスの作成
+```bash
+# 本番サーバーで実行
+cd /var/www/l4l6
+./scripts/setup-auto-deploy.sh
+```
 
-詳細は別途ご相談ください。
+これで`git pull`すると自動的に：
+1. 最新コードを取得
+2. ビルド実行
+3. PM2再起動
+
+### 方法2: systemd（高度）
+ファイル監視による完全自動化：
+
+```bash
+# セットアップスクリプトを実行
+./scripts/setup-systemd-deploy.sh
+
+# 表示されるコマンドをrootで実行
+```
+
+### 自動デプロイの無効化
+```bash
+# Git hookを削除
+rm .git/hooks/post-merge
+
+# またはsystemdサービスを停止
+sudo systemctl disable l4l6-deploy.path
+```
