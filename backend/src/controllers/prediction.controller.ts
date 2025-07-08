@@ -1,11 +1,12 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { PredictionService } from '../services/prediction.service';
 import { predictionQuerySchema, predictionIdSchema } from '../validation/prediction.validation';
 import { log } from '../utils/logger';
+import { AuthenticatedRequest } from '../types/auth.types';
 
 const predictionService = new PredictionService();
 
-export const listPredictions = async (req: Request, res: Response, next: NextFunction) => {
+export const listPredictions = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { error, value } = predictionQuerySchema.validate(req.query);
     if (error) {
@@ -33,7 +34,7 @@ export const listPredictions = async (req: Request, res: Response, next: NextFun
   }
 };
 
-export const getPredictionById = async (req: Request, res: Response, next: NextFunction) => {
+export const getPredictionById = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { error } = predictionIdSchema.validate({ id: req.params.id });
     if (error) {
@@ -60,7 +61,7 @@ export const getPredictionById = async (req: Request, res: Response, next: NextF
   }
 };
 
-export const getLatestPrediction = async (req: Request, res: Response, next: NextFunction) => {
+export const getLatestPrediction = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     // 認証必須
     if (!req.user) {
@@ -102,7 +103,7 @@ export const getLatestPrediction = async (req: Request, res: Response, next: Nex
   }
 };
 
-export const getUserPredictionHistory = async (req: Request, res: Response, next: NextFunction) => {
+export const getUserPredictionHistory = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     // 認証必須
     if (!req.user) {

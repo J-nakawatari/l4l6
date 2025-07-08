@@ -33,6 +33,7 @@
     ]
   },
   "devDependencies": {
+    "@redocly/cli": "^1.10.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.10",
     "@types/supertest": "^6.0.3",
@@ -40,8 +41,8 @@
     "mongodb-memory-server": "^10.1.4",
     "supertest": "^7.1.2",
     "ts-jest": "^29.4.0",
-    "typescript": "^5.8.3",
-    "@redocly/cli": "^1.10.0"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "@types/bcrypt": "^5.0.2",
