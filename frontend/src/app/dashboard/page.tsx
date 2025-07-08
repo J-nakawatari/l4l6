@@ -24,13 +24,20 @@ interface Prediction {
 
 interface PredictionHistory {
   drawNumber: number;
-  predictions: string[];
-  result?: {
-    winning: string;
-    isWin: boolean;
-    prize: number;
+  drawDate: string;
+  dayOfWeek: string;
+  winningNumber: string;
+  kakoPrediction: string;
+  patterns: string[];
+  patternCount: number;
+  purchaseCount: number;
+  purchaseAmount: number;
+  winType: 'straight' | 'box' | null;
+  winAmount: number;
+  prizeInfo: {
+    straight?: { amount: number; winners: number };
+    box?: { amount: number; winners: number };
   };
-  createdAt: string;
 }
 
 export default function DashboardPage() {
@@ -44,7 +51,7 @@ export default function DashboardPage() {
   
   const currentYear = new Date().getFullYear();
   const currentYearHistory = predictionHistory.filter(h => 
-    new Date(h.createdAt).getFullYear() === currentYear
+    new Date(h.drawDate).getFullYear() === currentYear
   );
 
   useEffect(() => {
@@ -142,8 +149,8 @@ export default function DashboardPage() {
         }
       }
 
-      // 過去の予想結果を取得
-      const historyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/predictions/history`, {
+      // 過去の予想結果を取得（kako algorithm）
+      const historyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/draw-results/history-with-prediction?limit=10`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -152,7 +159,7 @@ export default function DashboardPage() {
 
       if (historyResponse.ok) {
         const historyData = await historyResponse.json();
-        setPredictionHistory(historyData.predictions || []);
+        setPredictionHistory(historyData.results || []);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -204,7 +211,7 @@ export default function DashboardPage() {
                 </svg>
               </div>
             </div>
-            <p className="stats-value">{currentYearHistory.filter(h => h.result?.isWin).length}</p>
+            <p className="stats-value">{currentYearHistory.filter(h => h.winType !== null).length}</p>
             <p className="stats-label">当選回数</p>
           </div>
 
@@ -217,7 +224,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <p className="stats-value">
-              {currentYearHistory.reduce((sum, h) => sum + (h.result?.isWin ? h.result.prize : 0), 0).toLocaleString()}
+              {currentYearHistory.reduce((sum, h) => sum + (h.winType !== null ? h.winAmount : 0), 0).toLocaleString()}
             </p>
             <p className="stats-label">獲得賞金（円）</p>
           </div>
@@ -232,7 +239,7 @@ export default function DashboardPage() {
             </div>
             <p className="stats-value">
               {currentYearHistory.length > 0 
-                ? Math.round((currentYearHistory.filter(h => h.result?.isWin).length / currentYearHistory.length) * 100)
+                ? Math.round((currentYearHistory.filter(h => h.winType !== null).length / currentYearHistory.length) * 100)
                 : 0}%
             </p>
             <p className="stats-label">的中率</p>
@@ -336,45 +343,87 @@ export default function DashboardPage() {
           
           {predictionHistory && predictionHistory.length > 0 ? (
             <div className="space-y-4">
-              {predictionHistory.slice(0, 10).map((history) => (
+              {predictionHistory.map((history) => (
                 <div
                   key={history.drawNumber}
                   className="card p-6 hover:shadow-lg transition-shadow"
                 >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <h4 className="font-semibold text-gray-900 dark:text-white">第{history.drawNumber}回</h4>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          {new Date(history.createdAt).toLocaleDateString('ja-JP')}
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-3">
+                      <h4 className="font-semibold text-gray-900 dark:text-white">第{history.drawNumber}回</h4>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {new Date(history.drawDate).toLocaleDateString('ja-JP')}（{history.dayOfWeek}）
+                      </span>
+                      {history.winType && (
+                        <span className={`badge ${
+                          history.winType === 'straight' ? 'badge-success' : 'badge-primary'
+                        }`}>
+                          {history.winType === 'straight' ? 'ストレート' : 'ボックス'}
                         </span>
-                        {history.result && (
-                          <span className={`badge ${
-                            history.result.isWin ? 'badge-success' : 'badge-secondary'
-                          }`}>
-                            {history.result.isWin ? '当選' : 'はずれ'}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex gap-2 mb-3">
-                        {history.predictions.map((num, index) => (
-                          <div key={index} className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center font-mono font-semibold text-sm sm:text-base text-gray-900 dark:text-white">
-                            {num}
-                          </div>
-                        ))}
-                      </div>
-                      {history.result && (
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">
-                            当選番号: <span className="font-mono font-medium">{history.result.winning}</span>
-                          </span>
-                          {history.result.isWin && (
-                            <span className="text-green-600 dark:text-green-400 font-semibold">
-                              獲得賞金: {history.result.prize.toLocaleString()}円
-                            </span>
-                          )}
-                        </div>
                       )}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* 予想と結果 */}
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">予想・結果</h5>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">予想番号:</span>
+                          <div className="flex gap-1">
+                            {history.kakoPrediction.split('').map((digit, index) => (
+                              <div key={index} className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center font-mono font-semibold text-sm text-blue-700 dark:text-blue-300">
+                                {digit}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">当選番号:</span>
+                          <div className="flex gap-1">
+                            {history.winningNumber.split('').map((digit, index) => (
+                              <div key={index} className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center font-mono font-semibold text-sm text-gray-900 dark:text-white">
+                                {digit}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          パターン数: {history.patternCount}通り
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* 購入・賞金情報 */}
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">購入・賞金情報</h5>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">購入口数:</span>
+                          <span className="font-medium">{history.purchaseCount}口</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">購入金額:</span>
+                          <span className="font-medium">{history.purchaseAmount.toLocaleString()}円</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">当選金額:</span>
+                          <span className={`font-medium ${
+                            history.winAmount > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                          }`}>
+                            {history.winAmount > 0 ? '+' : ''}{history.winAmount.toLocaleString()}円
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm border-t pt-2">
+                          <span className="text-gray-600 dark:text-gray-400">収支:</span>
+                          <span className={`font-semibold ${
+                            history.winAmount - history.purchaseAmount > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                          }`}>
+                            {history.winAmount - history.purchaseAmount > 0 ? '+' : ''}{(history.winAmount - history.purchaseAmount).toLocaleString()}円
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
