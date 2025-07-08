@@ -1,0 +1,49 @@
+name: Dependency Update
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # 毎週月曜日の深夜に実行
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Update backend dependencies
+        run: |
+          cd backend
+          npm update
+          npm audit fix
+        continue-on-error: true
+      
+      - name: Update frontend dependencies
+        run: |
+          cd frontend
+          npm update
+          npm audit fix
+        continue-on-error: true
+      
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update dependencies'
+          title: 'chore: weekly dependency updates'
+          body: |
+            ## 依存関係の自動更新
+            
+            このPRは自動的に作成されました。
+            
+            - [ ] テストがパスすることを確認
+            - [ ] 破壊的変更がないことを確認
+            - [ ] パフォーマンスへの影響を確認
+          branch: chore/dependency-updates
+          delete-branch: true
