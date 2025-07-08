@@ -16,7 +16,7 @@ const transactions: Transaction[] = [
   {
     id: 1,
     type: 'purchase',
-    title: '第1700回 ロト6 購入',
+    title: '第1700回 ナンバーズ4 購入',
     date: '2024-01-08 19:00',
     amount: '-¥200',
     status: 'completed'
@@ -32,7 +32,7 @@ const transactions: Transaction[] = [
   {
     id: 3,
     type: 'purchase',
-    title: '第1699回 ロト6 購入',
+    title: '第1699回 ナンバーズ4 購入',
     date: '2024-01-04 18:30',
     amount: '-¥400',
     status: 'completed'
@@ -40,7 +40,7 @@ const transactions: Transaction[] = [
   {
     id: 4,
     type: 'purchase',
-    title: '第1698回 ロト6 購入',
+    title: '第1698回 ナンバーズ4 購入',
     date: '2024-01-01 19:00',
     amount: '-¥200',
     status: 'completed'

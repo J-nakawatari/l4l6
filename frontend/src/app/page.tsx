@@ -32,7 +32,7 @@ export default function LandingPage() {
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-800">ロト6予想AI</h1>
+            <h1 className="text-2xl font-bold text-gray-800">ナンバーズ4予想AI</h1>
             <div className="space-x-4">
               <button
                 onClick={() => router.push('/login')}
@@ -56,7 +56,7 @@ export default function LandingPage() {
         {/* ヒーローセクション */}
         <section className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-800 mb-6">
-            AIとデータ分析で、あなたのロト6を科学する
+            AIとデータ分析で、あなたのナンバーズ4を科学する
           </h2>
           <p className="text-xl text-gray-600 mb-8">
             過去データからの統計予想 + AIによる10点予想で当選確率UP！

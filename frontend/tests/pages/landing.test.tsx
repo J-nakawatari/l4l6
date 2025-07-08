@@ -11,7 +11,7 @@ jest.mock('next/navigation', () => ({
 describe('LandingPage', () => {
   it('ヘッダーにサービス名が表示される', () => {
     render(<LandingPage />);
-    expect(screen.getByText('ロト6予想AI')).toBeInTheDocument();
+    expect(screen.getByText('ナンバーズ4予想AI')).toBeInTheDocument();
   });
 
   it('過去の当選実績が表示される', () => {

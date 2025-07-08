@@ -59,7 +59,7 @@ export async function sendVerificationEmail(
 
   await sendEmail({
     to: email,
-    subject: '【ロト予想サイト】メールアドレスの確認',
+    subject: '【ナンバーズ4予想サイト】メールアドレスの確認',
     html,
     text,
   });
@@ -96,7 +96,7 @@ export async function sendPasswordResetEmail(
 
   await sendEmail({
     to: email,
-    subject: '【ロト予想サイト】パスワードリセット',
+    subject: '【ナンバーズ4予想サイト】パスワードリセット',
     html,
     text,
   });
@@ -131,7 +131,7 @@ export async function sendSubscriptionConfirmationEmail(
 
   await sendEmail({
     to: email,
-    subject: '【ロト予想サイト】サブスクリプション登録完了',
+    subject: '【ナンバーズ4予想サイト】サブスクリプション登録完了',
     html,
     text,
   });
@@ -166,7 +166,7 @@ export async function sendPredictionNotificationEmail(
 
   await sendEmail({
     to: email,
-    subject: `【ロト予想サイト】第${drawNumber}回の予想が公開されました`,
+    subject: `【ナンバーズ4予想サイト】第${drawNumber}回の予想が公開されました`,
     html,
     text,
   });

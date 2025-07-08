@@ -135,7 +135,7 @@ describe('DataLogicAlgorithm', () => {
       predictions.forEach(prediction => {
         const sum = prediction.reduce((a, b) => a + b, 0);
         
-        // ロト6の理論的な合計値の中心は132（1〜43の平均22 × 6）
+        // ナンバーズ4の理論的な合計値の計算ロジック
         // 通常は100〜170の範囲に収まることが多い
         expect(sum).toBeGreaterThanOrEqual(80);
         expect(sum).toBeLessThanOrEqual(190);
