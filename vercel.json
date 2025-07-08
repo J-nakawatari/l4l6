@@ -1,10 +1,4 @@
 {
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "https://l4l6-backend.vercel.app/api/:path*"
-    }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",
@@ -15,7 +9,7 @@
         },
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://l4l6.com"
+          "value": "*"
         },
         {
           "key": "Access-Control-Allow-Methods",
