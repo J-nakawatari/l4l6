@@ -346,8 +346,16 @@ export default function DashboardPage() {
               {predictionHistory.map((history) => (
                 <div
                   key={history.drawNumber}
-                  className="card p-6 hover:shadow-lg transition-shadow"
+                  className={`card p-6 hover:shadow-lg transition-shadow relative ${
+                    history.winType ? 'bg-yellow-50 dark:bg-yellow-900/10' : ''
+                  }`}
                 >
+                  {history.winType && (
+                    <div className="absolute top-4 right-4 flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full shadow-md animate-pulse">
+                      <span className="text-lg">🎉</span>
+                      <span className="text-sm font-bold">予想的中！</span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-3">
                       <h4 className="font-semibold text-gray-900 dark:text-white">第{history.drawNumber}回</h4>
@@ -356,8 +364,10 @@ export default function DashboardPage() {
                       </span>
                       {history.winType && (
                         <span className={`badge ${
-                          history.winType === 'straight' ? 'badge-success' : 'badge-primary'
-                        }`}>
+                          history.winType === 'straight' 
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100' 
+                            : 'bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-100'
+                        } px-3 py-1 rounded-full text-sm font-medium`}>
                           {history.winType === 'straight' ? 'ストレート' : 'ボックス'}
                         </span>
                       )}
