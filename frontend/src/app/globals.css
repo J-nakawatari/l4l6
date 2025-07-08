@@ -99,7 +99,10 @@
 
   .card-hover {
     @apply hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1;
-    box-shadow: hover:0 8px 24px rgba(0, 0, 0, 0.08);
+  }
+  
+  .card-hover:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   }
   
   .card-image {
