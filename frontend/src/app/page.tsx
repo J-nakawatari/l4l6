@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -13,6 +13,16 @@ interface PastResult {
 export default function LandingPage() {
   const router = useRouter();
   const [showMore, setShowMore] = useState(false);
+
+  // 環境変数のデバッグ
+  useEffect(() => {
+    console.log('=== 環境変数デバッグ情報 ===');
+    console.log('NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('全ての環境変数 (NEXT_PUBLIC_*):', 
+      Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC_')));
+    console.log('========================');
+  }, []);
 
   // デモデータ
   const pastResults: PastResult[] = [

@@ -22,7 +22,23 @@ export const authLimiter = rateLimit({
 
 // CORS設定
 export const corsOptions: cors.CorsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://l4l6.com',
+      'https://www.l4l6.com'
+    ];
+    
+    // 開発環境では全てのオリジンを許可
+    if (process.env.NODE_ENV === 'development') {
+      callback(null, true);
+    } else if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200,
 };
