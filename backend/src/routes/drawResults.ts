@@ -55,11 +55,12 @@ function generatePermutations(digits: string[]): string[] {
 }
 
 /**
- * 過去の抽選結果とKako予想を取得
+ * 過去の抽選結果とKako予想、AIランダム予想を取得
  */
 router.get('/history-with-prediction', authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
     const limit = parseInt(req.query.limit as string) || 10;
+    const includeAiRandom = req.query.includeAiRandom === 'true';
     
     // 最新の抽選結果を取得（予想生成用に追加で100件）
     const allResults = await DrawResult.find()
@@ -103,7 +104,7 @@ router.get('/history-with-prediction', authenticate, async (req: Request, res: R
       // 曜日を計算
       const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][currentDraw.drawDate.getDay()];
       
-      results.push({
+      const result: any = {
         drawNumber: currentDraw.drawNumber,
         drawDate: currentDraw.drawDate,
         dayOfWeek,
@@ -116,7 +117,48 @@ router.get('/history-with-prediction', authenticate, async (req: Request, res: R
         winType,
         winAmount,
         prizeInfo: currentDraw.prize
-      });
+      };
+      
+      // AIランダム予想も含める場合
+      if (includeAiRandom) {
+        const aiRandomPredictions = generateAIRandomPredictions(currentDraw.drawNumber);
+        const aiRandomWins: Array<{
+          prediction: string;
+          winType: 'straight' | 'box' | null;
+          winAmount: number;
+        }> = [];
+        
+        let aiRandomTotalWinAmount = 0;
+        
+        for (const prediction of aiRandomPredictions) {
+          const aiPatterns = generatePermutations(prediction.split(''));
+          let aiWinType: 'straight' | 'box' | null = null;
+          let aiWinAmount = 0;
+          
+          if (currentDraw.winningNumber === prediction) {
+            aiWinType = 'straight';
+            aiWinAmount = 900000;
+          } else if (aiPatterns.includes(currentDraw.winningNumber)) {
+            aiWinType = 'box';
+            aiWinAmount = 37500;
+          }
+          
+          aiRandomWins.push({
+            prediction,
+            winType: aiWinType,
+            winAmount: aiWinAmount
+          });
+          
+          aiRandomTotalWinAmount += aiWinAmount;
+        }
+        
+        result.aiRandomPredictions = aiRandomPredictions;
+        result.aiRandomWins = aiRandomWins;
+        result.aiRandomPurchaseAmount = 2400; // 12個 × 200円
+        result.aiRandomTotalWinAmount = aiRandomTotalWinAmount;
+      }
+      
+      results.push(result);
     }
     
     res.json({ results });

@@ -38,6 +38,15 @@ interface PredictionHistory {
     straight?: { amount: number; winners: number };
     box?: { amount: number; winners: number };
   };
+  // AIランダム予想の追加フィールド
+  aiRandomPredictions?: string[];
+  aiRandomWins?: Array<{
+    prediction: string;
+    winType: 'straight' | 'box' | null;
+    winAmount: number;
+  }>;
+  aiRandomPurchaseAmount?: number;
+  aiRandomTotalWinAmount?: number;
 }
 
 export default function DashboardPage() {
@@ -53,6 +62,17 @@ export default function DashboardPage() {
   const currentYearHistory = predictionHistory.filter(h => 
     new Date(h.drawDate).getFullYear() === currentYear
   );
+  
+  // AIランダム予想の統計も計算
+  const aiRandomStats = currentYearHistory.reduce((acc, h) => {
+    if (h.aiRandomWins) {
+      const wins = h.aiRandomWins.filter(w => w.winType !== null);
+      acc.totalPredictions += 12;
+      acc.winCount += wins.length;
+      acc.totalWinAmount += h.aiRandomTotalWinAmount || 0;
+    }
+    return acc;
+  }, { totalPredictions: 0, winCount: 0, totalWinAmount: 0 });
 
   useEffect(() => {
     fetchDashboardData();
@@ -149,8 +169,8 @@ export default function DashboardPage() {
         }
       }
 
-      // 過去の予想結果を取得（kako algorithm）
-      const historyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/draw-results/history-with-prediction?limit=10`, {
+      // 過去の予想結果を取得（kako algorithm + AI Random）
+      const historyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/draw-results/history-with-prediction?limit=10&includeAiRandom=true`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -237,12 +257,19 @@ export default function DashboardPage() {
                 </svg>
               </div>
             </div>
-            <p className="stats-value">
-              {currentYearHistory.length > 0 
-                ? Math.round((currentYearHistory.filter(h => h.winType !== null).length / currentYearHistory.length) * 100)
-                : 0}%
-            </p>
-            <p className="stats-label">的中率</p>
+            <div>
+              <p className="stats-value">
+                {currentYearHistory.length > 0 
+                  ? Math.round((currentYearHistory.filter(h => h.winType !== null).length / currentYearHistory.length) * 100)
+                  : 0}%
+              </p>
+              <p className="stats-label text-xs">Kako的中率</p>
+              {aiRandomStats.totalPredictions > 0 && (
+                <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                  AI: {Math.round((aiRandomStats.winCount / aiRandomStats.totalPredictions) * 100)}%
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -334,10 +361,10 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">過去の予想結果（過去10回分）</h2>
             <button
-              onClick={() => router.push('/predictions')}
+              onClick={() => router.push('/predictions/history')}
               className="text-blue-600 hover:text-blue-700 text-sm font-medium hover:underline"
             >
-              予想一覧へ
+              予想結果一覧へ
             </button>
           </div>
           
@@ -410,32 +437,66 @@ export default function DashboardPage() {
                       <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">購入・賞金情報</h5>
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">購入口数:</span>
-                          <span className="font-medium">{history.purchaseCount}口</span>
+                          <span className="text-gray-600 dark:text-gray-400">Kako購入:</span>
+                          <span className="font-medium">{history.purchaseCount}口 ({history.purchaseAmount.toLocaleString()}円)</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">購入金額:</span>
-                          <span className="font-medium">{history.purchaseAmount.toLocaleString()}円</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">当選金額:</span>
+                          <span className="text-gray-600 dark:text-gray-400">Kako当選:</span>
                           <span className={`font-medium ${
-                            history.winAmount > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                            history.winAmount > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-500'
                           }`}>
                             {history.winAmount > 0 ? '+' : ''}{history.winAmount.toLocaleString()}円
                           </span>
                         </div>
+                        {history.aiRandomPredictions && (
+                          <>
+                            <div className="flex justify-between text-sm border-t pt-2">
+                              <span className="text-gray-600 dark:text-gray-400">AIランダム購入:</span>
+                              <span className="font-medium">12口 (2,400円)</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600 dark:text-gray-400">AIランダム当選:</span>
+                              <span className={`font-medium ${
+                                history.aiRandomTotalWinAmount && history.aiRandomTotalWinAmount > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-500'
+                              }`}>
+                                {history.aiRandomTotalWinAmount && history.aiRandomTotalWinAmount > 0 ? '+' : ''}{(history.aiRandomTotalWinAmount || 0).toLocaleString()}円
+                              </span>
+                            </div>
+                          </>
+                        )}
                         <div className="flex justify-between text-sm border-t pt-2">
-                          <span className="text-gray-600 dark:text-gray-400">収支:</span>
+                          <span className="text-gray-600 dark:text-gray-400">総収支:</span>
                           <span className={`font-semibold ${
-                            history.winAmount - history.purchaseAmount > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                            (history.winAmount + (history.aiRandomTotalWinAmount || 0)) - (history.purchaseAmount + (history.aiRandomPurchaseAmount || 0)) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                           }`}>
-                            {history.winAmount - history.purchaseAmount > 0 ? '+' : ''}{(history.winAmount - history.purchaseAmount).toLocaleString()}円
+                            {(history.winAmount + (history.aiRandomTotalWinAmount || 0)) - (history.purchaseAmount + (history.aiRandomPurchaseAmount || 0)) > 0 ? '+' : ''}{((history.winAmount + (history.aiRandomTotalWinAmount || 0)) - (history.purchaseAmount + (history.aiRandomPurchaseAmount || 0))).toLocaleString()}円
                           </span>
                         </div>
                       </div>
                     </div>
                   </div>
+                  
+                  {/* AIランダム予想結果（当選した場合のみ表示） */}
+                  {history.aiRandomWins && history.aiRandomWins.some(w => w.winType !== null) && (
+                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">AIランダム当選詳細</h5>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                        {history.aiRandomWins.filter(w => w.winType !== null).map((win, index) => (
+                          <div key={index} className="bg-orange-50 dark:bg-orange-900/20 rounded p-2">
+                            <div className="font-mono text-sm font-semibold text-orange-800 dark:text-orange-200">
+                              {win.prediction}
+                            </div>
+                            <div className="text-xs text-orange-600 dark:text-orange-400">
+                              {win.winType === 'straight' ? 'ストレート' : 'ボックス'}
+                            </div>
+                            <div className="text-xs font-medium text-green-600">
+                              +{win.winAmount.toLocaleString()}円
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
