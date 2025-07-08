@@ -47,7 +47,7 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       // ユーザー情報を取得
-      const userResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/users/me`, {
+      const userResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/users/me`, {
         credentials: 'include',
       });
 
@@ -64,7 +64,7 @@ export default function DashboardPage() {
 
       // 最新の予想を取得（有料会員のみ）
       if (userData.subscription.status === 'active') {
-        const predictionResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/predictions/latest`, {
+        const predictionResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/predictions/latest`, {
           credentials: 'include',
         });
 
@@ -75,7 +75,7 @@ export default function DashboardPage() {
       }
 
       // 過去の予想結果を取得
-      const historyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/predictions/history`, {
+      const historyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/predictions/history`, {
         credentials: 'include',
       });
 
