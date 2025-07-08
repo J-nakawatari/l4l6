@@ -49,6 +49,9 @@ export default function DashboardPage() {
       // ユーザー情報を取得
       const userResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/users/me`, {
         credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!userResponse.ok) {
@@ -56,16 +59,20 @@ export default function DashboardPage() {
           router.push('/login');
           return;
         }
-        throw new Error('Failed to fetch user data');
+        console.error('Failed to fetch user data:', userResponse.status);
+        return;
       }
 
       const userData = await userResponse.json();
       setUserData(userData);
 
       // 最新の予想を取得（有料会員のみ）
-      if (userData.subscription.status === 'active') {
+      if (userData.subscription && userData.subscription.status === 'active') {
         const predictionResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/predictions/latest`, {
           credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
         });
 
         if (predictionResponse.ok) {
@@ -77,11 +84,14 @@ export default function DashboardPage() {
       // 過去の予想結果を取得
       const historyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/predictions/history`, {
         credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       if (historyResponse.ok) {
         const historyData = await historyResponse.json();
-        setPredictionHistory(historyData.predictions);
+        setPredictionHistory(historyData.predictions || []);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -100,7 +110,7 @@ export default function DashboardPage() {
     );
   }
 
-  const isPremium = userData?.subscription.status === 'active';
+  const isPremium = userData?.subscription?.status === 'active';
 
   return (
     <DashboardLayout>
