@@ -39,10 +39,47 @@ export default function DashboardPage() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [latestPrediction, setLatestPrediction] = useState<Prediction | null>(null);
   const [predictionHistory, setPredictionHistory] = useState<PredictionHistory[]>([]);
+  const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  const handleSubscribe = async () => {
+    setIsProcessingCheckout(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/payments/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          priceId: 'price_1RieIg1qmMqgQ3qQ4PbwxTfq',
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          router.push('/login');
+          return;
+        }
+        throw new Error('チェックアウトセッションの作成に失敗しました');
+      }
+
+      const { url } = await response.json();
+      
+      // Stripe Checkoutページにリダイレクト
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      alert('エラーが発生しました。もう一度お試しください。');
+    } finally {
+      setIsProcessingCheckout(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -114,36 +151,122 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">ダッシュボード</h1>
+      <div className="dashboard-content">
+        {/* ヘッダー */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">ダッシュボード</h1>
+          <p className="text-gray-600 dark:text-gray-400">今日の予想と統計情報</p>
+        </div>
+
+        {/* 統計カード */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+          <div className="stats-card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+            </div>
+            <p className="stats-value">{predictionHistory.length}</p>
+            <p className="stats-label">予想回数</p>
+          </div>
+
+          <div className="stats-card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <p className="stats-value">{predictionHistory.filter(h => h.result?.isWin).length}</p>
+            <p className="stats-label">当選回数</p>
+          </div>
+
+          <div className="stats-card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <p className="stats-value">
+              {predictionHistory.reduce((sum, h) => sum + (h.result?.isWin ? h.result.prize : 0), 0).toLocaleString()}
+            </p>
+            <p className="stats-label">獲得賞金（円）</p>
+          </div>
+
+          <div className="stats-card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                </svg>
+              </div>
+            </div>
+            <p className="stats-value">
+              {predictionHistory.length > 0 
+                ? Math.round((predictionHistory.filter(h => h.result?.isWin).length / predictionHistory.length) * 100)
+                : 0}%
+            </p>
+            <p className="stats-label">的中率</p>
+          </div>
+        </div>
 
         {/* 次回予想セクション */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">次回予想</h2>
+        <section className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">次回予想</h2>
+            <button 
+              onClick={() => router.push('/predictions')}
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+            >
+              すべて見る →
+            </button>
+          </div>
           
           {isPremium && latestPrediction ? (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                第{latestPrediction.drawNumber}回 予想番号
-              </h3>
+            <div className="card p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  第{latestPrediction.drawNumber}回 予想番号
+                </h3>
+                <span className="badge badge-primary">最新</span>
+              </div>
               
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="text-lg font-medium text-gray-700 mb-3">データ分析予想</h4>
-                  <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <h4 className="font-medium text-gray-900 dark:text-white">データ分析予想</h4>
+                  </div>
+                  <div className="flex gap-2 sm:gap-3 flex-wrap">
                     {latestPrediction.predictions.dataLogic.map((num, index) => (
-                      <div key={index} className="bg-blue-50 text-blue-700 font-mono text-lg py-2 px-4 rounded">
+                      <div key={index} className="lottery-number w-12 h-12 sm:w-16 sm:h-16 text-lg sm:text-2xl">
                         {num}
                       </div>
                     ))}
                   </div>
                 </div>
                 
-                <div>
-                  <h4 className="text-lg font-medium text-gray-700 mb-3">AI予想</h4>
-                  <div className="space-y-2">
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                    </div>
+                    <h4 className="font-medium text-gray-900 dark:text-white">AI予想</h4>
+                  </div>
+                  <div className="flex gap-2 sm:gap-3 flex-wrap">
                     {latestPrediction.predictions.ai.map((num, index) => (
-                      <div key={index} className="bg-purple-50 text-purple-700 font-mono text-lg py-2 px-4 rounded">
+                      <div key={index} className="lottery-number w-12 h-12 sm:w-16 sm:h-16 text-lg sm:text-2xl">
                         {num}
                       </div>
                     ))}
@@ -151,75 +274,112 @@ export default function DashboardPage() {
                 </div>
               </div>
               
-              <p className="text-sm text-gray-500 mt-4">
-                生成日時: {new Date(latestPrediction.createdAt).toLocaleString('ja-JP')}
-              </p>
+              <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  生成日時: {new Date(latestPrediction.createdAt).toLocaleString('ja-JP')}
+                </p>
+                <button 
+                  onClick={() => router.push('/predictions')}
+                  className="btn btn-sm btn-primary"
+                >
+                  詳細を見る
+                </button>
+              </div>
             </div>
           ) : (
-            <div className="bg-gray-50 rounded-lg p-8 text-center">
-              <p className="text-gray-600 mb-4">
-                有料会員にアップグレードして、AI予想と統計分析予想をご利用ください
-              </p>
-              <button
-                onClick={() => router.push('/subscription')}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
-              >
-                プランを見る
-              </button>
+            <div className="card p-8 text-center">
+              <div className="empty-state">
+                <div className="empty-state-icon">
+                  <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <h3 className="empty-state-title">プレミアム機能</h3>
+                <p className="empty-state-message mb-6">
+                  有料会員にアップグレードして、AI予想と統計分析予想をご利用ください
+                </p>
+                <button
+                  onClick={handleSubscribe}
+                  disabled={isProcessingCheckout}
+                  className="btn btn-md btn-primary"
+                >
+                  {isProcessingCheckout ? '処理中...' : 'サブスク加入（月額1,980円）'}
+                </button>
+              </div>
             </div>
           )}
         </section>
 
         {/* 過去の予想結果セクション */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">過去の予想結果</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">過去の予想結果</h2>
+            <select className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800">
+              <option>すべて</option>
+              <option>当選のみ</option>
+              <option>最近30日</option>
+            </select>
+          </div>
           
           {predictionHistory && predictionHistory.length > 0 ? (
             <div className="space-y-4">
-              {predictionHistory.map((history) => (
+              {predictionHistory.slice(0, 5).map((history) => (
                 <div
                   key={history.drawNumber}
-                  className={`bg-white rounded-lg shadow-sm p-4 border-l-4 ${
-                    history.result?.isWin ? 'border-green-500' : 'border-gray-300'
-                  }`}
+                  className="card p-6 hover:shadow-lg transition-shadow"
                 >
                   <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-medium text-gray-800">第{history.drawNumber}回</h4>
-                      <p className="text-sm text-gray-600">
-                        {new Date(history.createdAt).toLocaleDateString('ja-JP')}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {history.predictions.map((num, index) => (
-                          <span key={index} className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
-                            {num}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <h4 className="font-semibold text-gray-900 dark:text-white">第{history.drawNumber}回</h4>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          {new Date(history.createdAt).toLocaleDateString('ja-JP')}
+                        </span>
+                        {history.result && (
+                          <span className={`badge ${
+                            history.result.isWin ? 'badge-success' : 'badge-secondary'
+                          }`}>
+                            {history.result.isWin ? '当選' : 'はずれ'}
                           </span>
+                        )}
+                      </div>
+                      <div className="flex gap-2 mb-3">
+                        {history.predictions.map((num, index) => (
+                          <div key={index} className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center font-mono font-semibold text-sm sm:text-base text-gray-900 dark:text-white">
+                            {num}
+                          </div>
                         ))}
                       </div>
+                      {history.result && (
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">
+                            当選番号: <span className="font-mono font-medium">{history.result.winning}</span>
+                          </span>
+                          {history.result.isWin && (
+                            <span className="text-green-600 dark:text-green-400 font-semibold">
+                              獲得賞金: {history.result.prize.toLocaleString()}円
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    
-                    {history.result && (
-                      <div className="text-right">
-                        <p className={`font-medium ${history.result.isWin ? 'text-green-600' : 'text-gray-500'}`}>
-                          {history.result.isWin ? '当選！' : '残念...'}
-                        </p>
-                        {history.result.isWin && (
-                          <p className="text-green-600 font-bold">
-                            {history.result.prize.toLocaleString()}円
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-500 mt-1">
-                          当選番号: {history.result.winning}
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="bg-gray-50 rounded-lg p-8 text-center">
-              <p className="text-gray-600">まだ予想履歴がありません</p>
+            <div className="card p-8">
+              <div className="empty-state">
+                <div className="empty-state-icon">
+                  <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 className="empty-state-title">予想履歴なし</h3>
+                <p className="empty-state-message">
+                  まだ予想履歴がありません。予想を始めましょう！
+                </p>
+              </div>
             </div>
           )}
         </section>

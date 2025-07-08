@@ -6,13 +6,10 @@ import { usePathname } from 'next/navigation';
 import {
   IconDashboard,
   IconHome,
-  IconChartBar,
   IconCoin,
   IconInbox,
   IconCalendar,
   IconSettings,
-  IconHelp,
-  IconMoon,
   IconLogout
 } from '@tabler/icons-react';
 
@@ -27,28 +24,43 @@ const sidebarItems: SidebarItem[] = [
   // Main Menu
   { label: 'Dashboard', icon: <IconDashboard size={20} />, href: '/dashboard', section: 'main' },
   { label: '予想一覧', icon: <IconHome size={20} />, href: '/predictions', section: 'main' },
-  { label: '統計分析', icon: <IconChartBar size={20} />, href: '/insights', section: 'main' },
   { label: 'サブスク管理', icon: <IconCoin size={20} />, href: '/subscription', section: 'main' },
   { label: 'お知らせ', icon: <IconInbox size={20} />, href: '/inbox', section: 'main' },
   { label: 'カレンダー', icon: <IconCalendar size={20} />, href: '/calendar', section: 'main' },
   
   // Preferences
   { label: '設定', icon: <IconSettings size={20} />, href: '/settings', section: 'preferences' },
-  { label: 'ヘルプ', icon: <IconHelp size={20} />, href: '/help', section: 'preferences' },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export default function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="sidebar">
+    <aside className="sidebar w-64 h-full bg-white">
       {/* Logo */}
       <div className="px-6 py-6 border-b">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">L6</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">N4</span>
+            </div>
+            <span className="font-semibold text-xl">Numbers4</span>
           </div>
-          <span className="font-semibold text-xl">Lotto6</span>
+          {/* モバイル用閉じるボタン */}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors lg:hidden"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
 
@@ -66,6 +78,7 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={`sidebar-item ${pathname === item.href ? 'active' : ''}`}
             >
               {item.icon}
@@ -88,29 +101,21 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={`sidebar-item ${pathname === item.href ? 'active' : ''}`}
             >
               {item.icon}
               <span>{item.label}</span>
             </Link>
           ))}
-        
-        {/* Dark Mode Toggle */}
-        <button className="sidebar-item w-full">
-          <IconMoon size={20} />
-          <span>ダークモード</span>
-          <div className="ml-auto">
-            <label className="switch">
-              <input type="checkbox" />
-              <span className="slider round"></span>
-            </label>
-          </div>
-        </button>
       </div>
 
       {/* Logout */}
       <div className="py-4 border-t mt-auto">
-        <button className="sidebar-item w-full text-red-600 hover:bg-red-50">
+        <button 
+          onClick={onClose}
+          className="sidebar-item w-full text-red-600 hover:bg-red-50"
+        >
           <IconLogout size={20} />
           <span>ログアウト</span>
         </button>

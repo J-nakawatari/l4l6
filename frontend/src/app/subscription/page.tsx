@@ -136,7 +136,7 @@ export default function SubscriptionPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto px-4">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">プランを選択</h1>
 
         {currentSubscription && (
@@ -151,7 +151,7 @@ export default function SubscriptionPage() {
         )}
 
         {/* 料金プラン切り替え */}
-        <div className="flex items-center justify-center mb-8">
+        <div className="flex items-center justify-center mb-6 sm:mb-8">
           <span className={`mr-3 ${!isYearly ? 'font-semibold' : ''}`}>月額プラン</span>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
@@ -174,12 +174,12 @@ export default function SubscriptionPage() {
         )}
 
         {/* プラン一覧 */}
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
           {plans.map((plan) => (
             <div
               key={plan.id}
               data-testid={`plan-${plan.id}`}
-              className={`relative bg-white rounded-lg shadow-lg p-8 ${
+              className={`relative bg-white rounded-lg shadow-lg p-6 sm:p-8 ${
                 plan.recommended ? 'border-2 border-blue-500' : 'border border-gray-200'
               }`}
             >
@@ -194,7 +194,7 @@ export default function SubscriptionPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-4">{plan.name}</h2>
 
               <div className="mb-6">
-                <p className="text-4xl font-bold text-gray-900">
+                <p className="text-3xl sm:text-4xl font-bold text-gray-900">
                   {isYearly ? (
                     <>
                       年額 {plan.price.yearly.toLocaleString()}円
@@ -210,7 +210,7 @@ export default function SubscriptionPage() {
                 </p>
               </div>
 
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-6 sm:mb-8">
                 {plan.features.map((feature, index) => (
                   <li key={index} className="flex items-start">
                     <svg
@@ -251,7 +251,7 @@ export default function SubscriptionPage() {
         </div>
 
         {/* 注意事項 */}
-        <div className="mt-12 text-center text-sm text-gray-600">
+        <div className="mt-8 sm:mt-12 text-center text-sm text-gray-600">
           <p>・すべてのプランは自動更新されます</p>
           <p>・いつでもキャンセル可能です</p>
           <p>・プラン変更は次回更新時に適用されます</p>

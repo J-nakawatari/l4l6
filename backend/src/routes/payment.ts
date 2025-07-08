@@ -52,7 +52,7 @@ const PLANS = {
 // チェックアウトセッション作成
 router.post('/create-checkout-session', authMiddleware, async (req: any, res): Promise<void> => {
   try {
-    const { planId, billingPeriod } = req.body;
+    const { planId, billingPeriod, priceId } = req.body;
     
     if (!req.user) {
       res.status(401).json({ error: 'User not authenticated' });
@@ -62,25 +62,31 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
     const userId = req.user._id;
     const userEmail = req.user.email;
 
-    // プランとbillingPeriodの検証
-    if (!PLANS[planId as keyof typeof PLANS]) {
-      res.status(400).json({ error: 'Invalid plan ID' });
-      return;
-    }
+    let lineItems;
+    
+    // priceIdが提供された場合は既存の価格IDを使用
+    if (priceId) {
+      lineItems = [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ];
+    } else {
+      // プランとbillingPeriodの検証
+      if (!PLANS[planId as keyof typeof PLANS]) {
+        res.status(400).json({ error: 'Invalid plan ID' });
+        return;
+      }
 
-    if (billingPeriod !== 'monthly' && billingPeriod !== 'yearly') {
-      res.status(400).json({ error: 'Invalid billing period' });
-      return;
-    }
+      if (billingPeriod !== 'monthly' && billingPeriod !== 'yearly') {
+        res.status(400).json({ error: 'Invalid billing period' });
+        return;
+      }
 
-    const planInfo = PLANS[planId as keyof typeof PLANS][billingPeriod as 'monthly' | 'yearly'];
-
-    // Stripeチェックアウトセッションを作成
-    const session = await getStripe().checkout.sessions.create({
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      customer_email: userEmail,
-      line_items: [
+      const planInfo = PLANS[planId as keyof typeof PLANS][billingPeriod as 'monthly' | 'yearly'];
+      
+      lineItems = [
         {
           price_data: {
             currency: 'jpy',
@@ -95,7 +101,15 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
           },
           quantity: 1,
         },
-      ],
+      ];
+    }
+
+    // Stripeチェックアウトセッションを作成
+    const session = await getStripe().checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      customer_email: userEmail,
+      line_items: lineItems,
       success_url: `${process.env.FRONTEND_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.FRONTEND_URL}/subscription`,
       metadata: {
@@ -105,7 +119,10 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
       },
     });
 
-    res.json({ sessionId: session.id });
+    res.json({ 
+      sessionId: session.id,
+      url: session.url 
+    });
   } catch (error) {
     console.error('Checkout session creation error:', error);
     res.status(500).json({ 
