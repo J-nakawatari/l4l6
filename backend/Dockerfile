@@ -1,5 +1,5 @@
-# Node.js 18 LTS をベースイメージとして使用
-FROM node:18-alpine AS builder
+# Node.js 20 LTS をベースイメージとして使用
+FROM node:20-alpine AS builder
 
 # 作業ディレクトリを設定
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # 本番用イメージ
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -25,7 +25,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 本番用の依存関係のみインストール
-RUN npm ci --only=production
+RUN npm ci --production || npm install --production
 
 # ビルドされたアプリケーションをコピー
 COPY --from=builder /app/dist ./dist
