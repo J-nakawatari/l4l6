@@ -55,8 +55,10 @@
     "@types/morgan": "^1.9.10",
     "@types/swagger-ui-express": "^4.1.8",
     "@types/yamljs": "^0.2.34",
+    "axios": "^1.10.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
+    "cheerio": "^1.1.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.1.0",
@@ -68,10 +70,12 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.2",
     "morgan": "^1.10.0",
+    "puppeteer": "^24.12.0",
     "stripe": "^18.3.0",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0",
+    "xlsx": "^0.18.5",
     "yamljs": "^0.3.0"
   }
 }

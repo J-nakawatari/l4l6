@@ -5,6 +5,7 @@ export interface IPrediction extends Document {
   drawDate: Date;
   dataLogicPredictions: string[];
   aiPredictions: string[];
+  kakoPredictions: string[];
   generatedAt: Date;
   viewCount: number;
   createdAt: Date;
@@ -57,6 +58,19 @@ const predictionSchema = new Schema<IPrediction>({
       message: '予想は4桁の数字で、最大10個までです',
     },
   },
+  kakoPredictions: {
+    type: [String],
+    required: [true, '過去実績予想は必須です'],
+    validate: {
+      validator: function(predictions: string[]) {
+        // 最大10個まで
+        if (predictions.length > 10) return false;
+        // 各予想が4桁の数字
+        return predictions.every(p => /^\d{4}$/.test(p));
+      },
+      message: '予想は4桁の数字で、最大10個までです',
+    },
+  },
   generatedAt: {
     type: Date,
     default: Date.now,
@@ -83,14 +97,14 @@ predictionSchema.methods.incrementViewCount = async function(): Promise<IPredict
 
 // 重複チェック
 predictionSchema.methods.hasDuplicatePredictions = function(): boolean {
-  const allPredictions = [...this.dataLogicPredictions, ...this.aiPredictions];
+  const allPredictions = [...this.dataLogicPredictions, ...this.aiPredictions, ...this.kakoPredictions];
   const uniquePredictions = new Set(allPredictions);
   return allPredictions.length !== uniquePredictions.size;
 };
 
 // ユニークな予想数
 predictionSchema.methods.getUniquePredictionsCount = function(): number {
-  const allPredictions = [...this.dataLogicPredictions, ...this.aiPredictions];
+  const allPredictions = [...this.dataLogicPredictions, ...this.aiPredictions, ...this.kakoPredictions];
   return new Set(allPredictions).size;
 };
 

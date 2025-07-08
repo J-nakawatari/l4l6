@@ -15,7 +15,11 @@ export interface IDrawResult extends Document {
   checkPredictionHits(prediction: IPrediction): Promise<{
     dataLogicHits: string[];
     aiHits: string[];
+    kakoPredictionsHits: string[];
     totalHits: number;
+    dataLogicResults: { straight: number; box: number; boxOnly: number };
+    aiResults: { straight: number; box: number; boxOnly: number };
+    kakoResults: { straight: number; box: number; boxOnly: number };
   }>;
 }
 
@@ -72,18 +76,32 @@ drawResultSchema.index({ drawDate: -1 });
 
 // 予想との照合
 drawResultSchema.methods.checkPredictionHits = async function(prediction: IPrediction) {
+  const { checkPredictions, countHits } = await import('../utils/lottery');
+  
   if (this.drawNumber !== prediction.drawNumber) {
     throw new Error('抽選回が一致しません');
   }
 
   const winningNumber = this.winningNumber;
-  const dataLogicHits = prediction.dataLogicPredictions.filter(p => p === winningNumber);
-  const aiHits = prediction.aiPredictions.filter(p => p === winningNumber);
+  
+  // 各アルゴリズムの結果をチェック
+  const dataLogicResults = checkPredictions(prediction.dataLogicPredictions || [], winningNumber);
+  const aiResults = checkPredictions(prediction.aiPredictions || [], winningNumber);
+  const kakoResults = checkPredictions(prediction.kakoPredictions || [], winningNumber);
+  
+  // ストレート当選のみを抽出
+  const dataLogicHits = dataLogicResults.filter(r => r.isStraight).map(r => r.prediction);
+  const aiHits = aiResults.filter(r => r.isStraight).map(r => r.prediction);
+  const kakoPredictionsHits = kakoResults.filter(r => r.isStraight).map(r => r.prediction);
 
   return {
     dataLogicHits,
     aiHits,
-    totalHits: dataLogicHits.length + aiHits.length,
+    kakoPredictionsHits,
+    totalHits: dataLogicHits.length + aiHits.length + kakoPredictionsHits.length,
+    dataLogicResults: countHits(dataLogicResults),
+    aiResults: countHits(aiResults),
+    kakoResults: countHits(kakoResults),
   };
 };
 
