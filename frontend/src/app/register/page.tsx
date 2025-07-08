@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 interface FormData {
+  name: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -12,6 +13,7 @@ interface FormData {
 }
 
 interface FormErrors {
+  name?: string;
   email?: string;
   password?: string;
   confirmPassword?: string;
@@ -22,6 +24,7 @@ interface FormErrors {
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
+    name: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -32,6 +35,10 @@ export default function RegisterPage() {
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
+
+    if (!formData.name) {
+      newErrors.name = '名前を入力してください';
+    }
 
     if (!formData.email) {
       newErrors.email = 'メールアドレスを入力してください';
@@ -76,6 +83,7 @@ export default function RegisterPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          name: formData.name,
           email: formData.email,
           password: formData.password,
         }),
@@ -114,6 +122,26 @@ export default function RegisterPage() {
           )}
 
           <div className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                名前
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className={`mt-1 block w-full px-3 py-2 border ${
+                  errors.name ? 'border-red-500' : 'border-gray-300'
+                } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+              />
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+              )}
+            </div>
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 メールアドレス
