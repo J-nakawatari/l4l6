@@ -32,6 +32,9 @@ app.use(httpLogging);
 app.use(performanceMonitoring);
 app.use(errorRateMonitoring);
 
+// Stripe Webhook用の生データを保持するミドルウェア（express.jsonより前に設定）
+app.use('/api/v1/payments/webhook', express.raw({ type: 'application/json' }));
+
 // 基本的なミドルウェア
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

@@ -4,6 +4,7 @@ import docsRoutes from './docs';
 import userRoutes from './user.routes';
 import predictionRoutes from './prediction.routes';
 import adminRoutes from './admin.routes';
+import paymentRoutes from './payment';
 import { RouteRegistry } from '../utils/routeRegistry';
 
 const router = Router();
@@ -14,9 +15,7 @@ v1Router.use('/auth', authRoutes);
 v1Router.use('/users', userRoutes);
 v1Router.use('/predictions', predictionRoutes);
 v1Router.use('/admin', adminRoutes);
-
-// TODO: 他のルートを追加
-// v1Router.use('/subscribe', subscribeRoutes);
+v1Router.use('/payments', paymentRoutes);
 
 // メインルーターに統合
 router.use('/api/v1', v1Router);

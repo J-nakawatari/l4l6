@@ -3,9 +3,11 @@ import bcrypt from 'bcrypt';
 
 export interface ISubscription {
   status: 'active' | 'inactive' | 'cancelled';
+  plan?: 'free' | 'basic' | 'premium';
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   currentPeriodEnd?: Date;
+  expiresAt?: Date;
 }
 
 export interface IUser extends Document {
@@ -78,9 +80,15 @@ const userSchema = new Schema<IUser>({
       enum: ['active', 'inactive', 'cancelled'],
       default: 'inactive',
     },
+    plan: {
+      type: String,
+      enum: ['free', 'basic', 'premium'],
+      default: 'free',
+    },
     stripeCustomerId: String,
     stripeSubscriptionId: String,
     currentPeriodEnd: Date,
+    expiresAt: Date,
   },
   emailNotifications: {
     newPrediction: { type: Boolean, default: true },
