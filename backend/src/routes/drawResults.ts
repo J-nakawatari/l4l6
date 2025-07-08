@@ -173,9 +173,9 @@ router.get('/history-with-prediction', authenticate, async (req: Request, res: R
 });
 
 /**
- * AI予想を生成
+ * AI予想を生成（固定シード使用）
  */
-function generateAIPredictions(past100: any[]): string[] {
+function generateAIPredictions(past100: any[], drawNumber: number): string[] {
   // 頻度計算
   const freq: Record<string, number>[] = [{}, {}, {}, {}];
   
@@ -187,6 +187,13 @@ function generateAIPredictions(past100: any[]): string[] {
     }
   });
   
+  // 抽選回数をシードとして使用
+  let seed = drawNumber;
+  const random = () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+  
   const predictions: string[] = [];
   const usedCombinations = new Set<string>();
   
@@ -197,8 +204,8 @@ function generateAIPredictions(past100: any[]): string[] {
       const sorted = Object.entries(freq[i]!).sort((a, b) => (b[1] as number) - (a[1] as number));
       // 上位3つからランダムに選択
       const topDigits = sorted.slice(0, 3).map(s => s[0]);
-      const randomIndex = Math.floor(Math.random() * topDigits.length);
-      prediction += topDigits[randomIndex];
+      const randomIndex = Math.floor(random() * topDigits.length);
+      prediction += topDigits[randomIndex] || '0';
     }
     
     if (!usedCombinations.has(prediction)) {
@@ -211,15 +218,15 @@ function generateAIPredictions(past100: any[]): string[] {
   while (predictions.length < 6) {
     let prediction = '';
     for (let i = 0; i < 4; i++) {
-      if (Math.random() < 0.7) {
+      if (random() < 0.7) {
         // 70%の確率で頻度ベース
         const sorted = Object.entries(freq[i]!).sort((a, b) => (b[1] as number) - (a[1] as number));
         const topDigits = sorted.slice(0, 5).map(s => s[0]);
-        const randomIndex = Math.floor(Math.random() * topDigits.length);
-        prediction += topDigits[randomIndex];
+        const randomIndex = Math.floor(random() * topDigits.length);
+        prediction += topDigits[randomIndex] || '0';
       } else {
         // 30%の確率でランダム
-        prediction += Math.floor(Math.random() * 10).toString();
+        prediction += Math.floor(random() * 10).toString();
       }
     }
     
@@ -316,7 +323,7 @@ router.get('/history-with-all-predictions', authenticate, async (req: Request, r
       }
 
       // AI予想を生成
-      const aiPredictions = generateAIPredictions(past100);
+      const aiPredictions = generateAIPredictions(past100, currentDraw.drawNumber);
       
       // AI予想の当選チェック
       const aiWins: Array<{ prediction: string; winType: 'straight' | 'box' | null; winAmount: number }> = [];
