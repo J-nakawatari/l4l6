@@ -1,0 +1,16 @@
+# 改行コードの自動変換設定
+* text=auto eol=lf
+
+# シェルスクリプトは必ずLF
+*.sh text eol=lf
+
+# バッチファイルは必ずCRLF
+*.bat text eol=crlf
+
+# バイナリファイル
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
