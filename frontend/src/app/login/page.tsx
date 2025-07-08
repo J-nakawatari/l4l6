@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 interface FormData {
   email: string;
@@ -64,12 +65,17 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
+        toast.success('ログインに成功しました！');
         router.push('/dashboard');
       } else {
-        setErrors({ general: data.message || 'ログインに失敗しました' });
+        const errorMessage = data.message || 'ログインに失敗しました';
+        setErrors({ general: errorMessage });
+        toast.error(errorMessage);
       }
     } catch (error) {
-      setErrors({ general: 'ネットワークエラーが発生しました' });
+      const errorMessage = 'ネットワークエラーが発生しました';
+      setErrors({ general: errorMessage });
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

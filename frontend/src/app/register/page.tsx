@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 interface FormData {
   name: string;
@@ -92,13 +93,21 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // 登録成功後、ログインページへリダイレクト
-        router.push('/login');
+        // 登録成功
+        toast.success('登録が完了しました！確認メールをご確認ください。');
+        // ログインページへリダイレクト
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
       } else {
-        setErrors({ general: data.message || '登録に失敗しました' });
+        const errorMessage = data.message || '登録に失敗しました';
+        setErrors({ general: errorMessage });
+        toast.error(errorMessage);
       }
     } catch (error) {
-      setErrors({ general: 'ネットワークエラーが発生しました' });
+      const errorMessage = 'ネットワークエラーが発生しました';
+      setErrors({ general: errorMessage });
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

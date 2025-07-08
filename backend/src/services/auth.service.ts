@@ -5,6 +5,9 @@ import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/email';
 import crypto from 'crypto';
 import { log } from '../utils/logger';
 
+// 一時的なトークンストレージ（本番環境ではRedisを使用）
+const tokenStore = new Map<string, { userId: string; expires: Date }>();
+
 interface RegisterData {
   email: string;
   password: string;
@@ -38,8 +41,11 @@ export class AuthService {
     // メール確認トークン生成
     const verificationToken = crypto.randomBytes(32).toString('hex');
     
-    // トークンをRedisに保存（実装省略）
-    // await redis.set(`email-verify:${verificationToken}`, (user as any)._id, 'EX', 86400); // 24時間
+    // トークンをストアに保存（24時間有効）
+    tokenStore.set(`email-verify:${verificationToken}`, {
+      userId: (user as any)._id.toString(),
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000)
+    });
 
     // 確認メール送信
     try {
@@ -123,16 +129,21 @@ export class AuthService {
     log.info('User logged out', { userId });
   }
 
-  async verifyEmail(_token: string): Promise<void> {
-    // トークンからユーザーIDを取得（実装省略）
-    // const userId = await redis.get(`email-verify:${token}`);
-    const userId = 'dummy'; // 仮実装
+  async verifyEmail(token: string): Promise<void> {
+    // トークンからユーザーIDを取得
+    const tokenData = tokenStore.get(`email-verify:${token}`);
 
-    if (!userId) {
+    if (!tokenData) {
       throw new AppError('Invalid or expired verification token', 400, 'INVALID_TOKEN');
     }
 
-    const user = await User.findById(userId);
+    // トークンの有効期限をチェック
+    if (tokenData.expires < new Date()) {
+      tokenStore.delete(`email-verify:${token}`);
+      throw new AppError('Verification token has expired', 400, 'TOKEN_EXPIRED');
+    }
+
+    const user = await User.findById(tokenData.userId);
     if (!user) {
       throw new AppError('User not found', 404, 'USER_NOT_FOUND');
     }
@@ -140,8 +151,8 @@ export class AuthService {
     user.emailVerified = true;
     await user.save();
 
-    // トークンを削除（実装省略）
-    // await redis.del(`email-verify:${token}`);
+    // トークンを削除
+    tokenStore.delete(`email-verify:${token}`);
 
     log.info('Email verified', { userId: (user as any)._id });
   }
