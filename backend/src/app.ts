@@ -6,11 +6,23 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { requestId, httpLogging, apiResponseLogger } from './middleware/logging';
 import { performanceMonitoring, errorRateMonitoring, memoryMonitoring } from './middleware/monitoring';
 import { log } from './utils/logger';
+import { connectDB } from './config/database';
 
 // 環境変数の読み込み
 dotenv.config();
 
+// MongoDB接続
+if (process.env.NODE_ENV !== 'test') {
+  connectDB().catch((error) => {
+    log.error('Failed to connect to MongoDB:', error);
+    process.exit(1);
+  });
+}
+
 const app = express();
+
+// Trust proxy設定（Nginxプロキシ経由のため）
+app.set('trust proxy', 1);
 
 // グローバルエラーハンドラー
 process.on('unhandledRejection', (reason, promise) => {

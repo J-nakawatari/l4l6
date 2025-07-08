@@ -10,6 +10,7 @@ export const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  trustProxy: true,
 });
 
 // 認証用の厳しいレート制限
@@ -18,6 +19,7 @@ export const authLimiter = rateLimit({
   max: 5, // 最大5リクエスト
   message: 'Too many authentication attempts, please try again later.',
   skipSuccessfulRequests: true,
+  trustProxy: true,
 });
 
 // CORS設定
