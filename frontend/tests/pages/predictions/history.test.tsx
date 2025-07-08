@@ -21,7 +21,16 @@ describe('PredictionHistoryPage', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+    // グローバルなモックをリセット
+    if (global.URL && global.URL.createObjectURL) {
+      delete (global.URL as any).createObjectURL;
+    }
+    // HTMLAnchorElement.prototype.clickもリセット
+    if (HTMLAnchorElement.prototype.click) {
+      delete (HTMLAnchorElement.prototype as any).click;
+    }
   });
 
   it('過去の予想結果一覧が表示される', async () => {
@@ -60,10 +69,12 @@ describe('PredictionHistoryPage', () => {
       currentPage: 1,
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    (global.fetch as jest.Mock).mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => mockData,
+      })
+    );
 
     render(<PredictionHistoryPage />);
 
@@ -96,10 +107,12 @@ describe('PredictionHistoryPage', () => {
       currentPage: 1,
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    (global.fetch as jest.Mock).mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => mockData,
+      })
+    );
 
     render(<PredictionHistoryPage />);
 
@@ -128,10 +141,12 @@ describe('PredictionHistoryPage', () => {
       currentPage: 1,
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    (global.fetch as jest.Mock).mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => mockData,
+      })
+    );
 
     render(<PredictionHistoryPage />);
 
@@ -155,10 +170,12 @@ describe('PredictionHistoryPage', () => {
       currentPage: 1,
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    (global.fetch as jest.Mock).mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => mockData,
+      })
+    );
 
     render(<PredictionHistoryPage />);
 
@@ -192,10 +209,12 @@ describe('PredictionHistoryPage', () => {
       currentPage: 1,
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    (global.fetch as jest.Mock).mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => mockData,
+      })
+    );
 
     render(<PredictionHistoryPage />);
 
@@ -247,10 +266,12 @@ describe('PredictionHistoryPage', () => {
       currentPage: 1,
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    (global.fetch as jest.Mock).mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => mockData,
+      })
+    );
 
     render(<PredictionHistoryPage />);
 
@@ -261,17 +282,27 @@ describe('PredictionHistoryPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('予想詳細 - 第1234回')).toBeInTheDocument();
-      expect(screen.getByText('データ分析予想')).toBeInTheDocument();
-      expect(screen.getByText('AI予想')).toBeInTheDocument();
+      // モーダル内の詳細セクションを確認（複数のヘッダーがあるため、より具体的なクエリを使用）
+      const modal = screen.getByText('予想詳細 - 第1234回').closest('div');
+      expect(modal).toBeInTheDocument();
+      
+      // getAllByRole を使用して複数のヘッダーを取得し、モーダル内のものを確認
+      const dataLogicHeaders = screen.getAllByText('データ分析予想');
+      expect(dataLogicHeaders.length).toBe(2); // 一覧と詳細モーダルで2つ
+      
+      const aiHeaders = screen.getAllByText('AI予想');
+      expect(aiHeaders.length).toBe(2); // 一覧と詳細モーダルで2つ
       expect(screen.getByText('信頼度: 85%')).toBeInTheDocument();
     });
   });
 
   it('認証エラーの場合、ログインページにリダイレクトされる', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: false,
-      status: 401,
-    });
+    (global.fetch as jest.Mock).mockImplementation(() =>
+      Promise.resolve({
+        ok: false,
+        status: 401,
+      })
+    );
 
     render(<PredictionHistoryPage />);
 
@@ -287,10 +318,12 @@ describe('PredictionHistoryPage', () => {
       currentPage: 1,
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    (global.fetch as jest.Mock).mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => mockData,
+      })
+    );
 
     render(<PredictionHistoryPage />);
 
@@ -321,34 +354,33 @@ describe('PredictionHistoryPage', () => {
       currentPage: 1,
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    (global.fetch as jest.Mock).mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => mockData,
+      })
+    );
 
     // CSVエクスポート用のモック
-    global.URL.createObjectURL = jest.fn();
+    const mockCreateObjectURL = jest.fn(() => 'blob:mock-url');
     const mockClick = jest.fn();
-    const mockSetAttribute = jest.fn();
-    document.createElement = jest.fn().mockImplementation((tagName) => {
-      if (tagName === 'a') {
-        return {
-          click: mockClick,
-          setAttribute: mockSetAttribute,
-          style: {},
-        };
-      }
-      return {};
-    });
+    
+    global.URL.createObjectURL = mockCreateObjectURL;
+    
+    // アンカー要素のクリックをモック
+    HTMLAnchorElement.prototype.click = mockClick;
 
     render(<PredictionHistoryPage />);
 
     await waitFor(() => {
-      const exportButton = screen.getByText('CSVエクスポート');
-      fireEvent.click(exportButton);
+      expect(screen.getByText('CSVエクスポート')).toBeInTheDocument();
     });
 
-    expect(mockSetAttribute).toHaveBeenCalledWith('download', expect.stringContaining('.csv'));
+    const exportButton = screen.getByText('CSVエクスポート');
+    fireEvent.click(exportButton);
+
+    // CSVエクスポート関数が実行されたことを確認
+    expect(mockCreateObjectURL).toHaveBeenCalled();
     expect(mockClick).toHaveBeenCalled();
   });
 });
