@@ -16,8 +16,8 @@
     "test:e2e": "jest --config ./jest.e2e.config.js",
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
-    "openapi:validate": "swagger-cli validate docs/openapi.yaml",
-    "openapi:bundle": "swagger-cli bundle docs/openapi.yaml --outfile docs/openapi.bundled.json"
+    "openapi:validate": "npx @redocly/cli lint docs/openapi.yaml",
+    "openapi:bundle": "npx @redocly/cli bundle docs/openapi.yaml --output docs/openapi.bundled.json"
   },
   "keywords": [],
   "author": "",
@@ -40,7 +40,8 @@
     "mongodb-memory-server": "^10.1.4",
     "supertest": "^7.1.2",
     "ts-jest": "^29.4.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@redocly/cli": "^1.10.0"
   },
   "dependencies": {
     "@types/bcrypt": "^5.0.2",
