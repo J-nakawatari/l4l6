@@ -1,4 +1,10 @@
 import { log } from './logger';
+import sgMail from '@sendgrid/mail';
+
+// SendGrid APIキーの設定
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
 interface EmailOptions {
   to: string;
@@ -7,7 +13,7 @@ interface EmailOptions {
   text?: string;
 }
 
-// メール送信の基本関数（本番環境ではNodemailerやSendGridを使用）
+// メール送信の基本関数
 export async function sendEmail(options: EmailOptions): Promise<void> {
   log.info('Sending email', {
     to: options.to,
@@ -15,17 +21,35 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
   });
 
   // 開発環境ではコンソールに出力
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development' && !process.env.SENDGRID_API_KEY) {
     console.log('\n=== Email Preview ===');
     console.log(`To: ${options.to}`);
     console.log(`Subject: ${options.subject}`);
     console.log(`Content: ${options.text || 'HTML content'}`);
     console.log('====================\n');
+    return;
   }
 
-  // TODO: 実際のメール送信実装
-  // const transporter = nodemailer.createTransport({...});
-  // await transporter.sendMail(options);
+  // SendGridでメール送信
+  if (process.env.SENDGRID_API_KEY) {
+    try {
+      const msg = {
+        to: options.to,
+        from: process.env.SENDGRID_FROM_EMAIL || process.env.FROM_EMAIL || 'noreply@example.com',
+        subject: options.subject,
+        text: options.text || '',
+        html: options.html,
+      };
+
+      await sgMail.send(msg);
+      log.info('Email sent successfully', { to: options.to });
+    } catch (error) {
+      log.error('Failed to send email', error);
+      throw new Error('Failed to send email');
+    }
+  } else {
+    log.warn('Email not sent: SENDGRID_API_KEY not configured');
+  }
 }
 
 export async function sendVerificationEmail(
@@ -35,6 +59,29 @@ export async function sendVerificationEmail(
 ): Promise<void> {
   const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
 
+  // SendGridテンプレートを使用する場合
+  if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_VERIFICATION_TEMPLATE_ID) {
+    try {
+      const msg = {
+        to: email,
+        from: process.env.SENDGRID_FROM_EMAIL || process.env.FROM_EMAIL || 'noreply@example.com',
+        templateId: process.env.SENDGRID_VERIFICATION_TEMPLATE_ID,
+        dynamicTemplateData: {
+          name: name,
+          verification_url: verificationUrl,
+        },
+      };
+
+      await sgMail.send(msg);
+      log.info('Verification email sent successfully', { to: email });
+      return;
+    } catch (error) {
+      log.error('Failed to send verification email with template', error);
+      // テンプレート送信に失敗した場合は通常のメールで送信
+    }
+  }
+
+  // 通常のHTMLメール送信
   const html = `
     <h1>メールアドレスの確認</h1>
     <p>こんにちは、${name}さん</p>
