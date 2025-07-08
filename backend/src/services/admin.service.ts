@@ -1,6 +1,5 @@
 import { User, IUser } from '../models/User';
 import { Prediction } from '../models/Prediction';
-import { DrawResult } from '../models/DrawResult';
 import { PredictionResult } from '../models/PredictionResult';
 import { AppError } from '../middleware/errorHandler';
 import { log } from '../utils/logger';
@@ -179,7 +178,6 @@ export class AdminService {
       totalUsers,
       activeUsers,
       subscribedUsers,
-      totalPredictions,
     ] = await Promise.all([
       User.countDocuments({ deletedAt: { $exists: false } }),
       User.countDocuments({ 
@@ -190,7 +188,6 @@ export class AdminService {
         'subscription.status': 'active',
         deletedAt: { $exists: false },
       }),
-      Prediction.countDocuments(),
     ]);
 
     // 収益計算（仮実装）
@@ -241,11 +238,10 @@ export class AdminService {
     });
 
     const monthlyPrice = 1000; // 月額料金
-    const yearlyPrice = 10000; // 年額料金
 
     const mrr = activeSubscriptions * monthlyPrice;
     const arr = mrr * 12;
-    const arpu = totalUsers > 0 ? mrr / totalUsers : 0;
+    const arpu = activeSubscriptions > 0 ? mrr / activeSubscriptions : 0;
     
     // LTV計算（平均継続月数 × 月額料金）
     const avgRetentionMonths = 8; // 仮の値
@@ -359,7 +355,7 @@ export class AdminService {
     };
   }
 
-  private async getUserActivities(userId: string) {
+  private async getUserActivities(_userId: string) {
     // アクティビティログの実装（仮）
     return [
       {

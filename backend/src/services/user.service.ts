@@ -60,8 +60,9 @@ export class UserService {
     if (data.bio !== undefined) user.bio = data.bio;
     if (data.emailNotifications !== undefined) {
       user.emailNotifications = {
-        ...user.emailNotifications,
-        ...data.emailNotifications,
+        newPrediction: data.emailNotifications.newPrediction ?? user.emailNotifications?.newPrediction ?? true,
+        hitNotification: data.emailNotifications.hitNotification ?? user.emailNotifications?.hitNotification ?? true,
+        newsletter: data.emailNotifications.newsletter ?? user.emailNotifications?.newsletter ?? true,
       };
     }
 

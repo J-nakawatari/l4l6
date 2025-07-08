@@ -6,7 +6,7 @@ import { sendSubscriptionConfirmationEmail } from '../utils/email';
 
 // Stripe初期化
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
+  apiVersion: '2025-06-30.basil',
 });
 
 // 価格ID（環境変数から取得すべき）
@@ -50,15 +50,17 @@ export async function createCheckoutSession(
         email: user.email,
         name: user.name,
         metadata: {
-          userId: user._id.toString(),
+          userId: (user._id as any).toString(),
         },
       });
       customerId = customer.id;
       
       // 顧客IDを保存
       user.subscription = {
-        ...user.subscription,
         stripeCustomerId: customerId,
+        status: user.subscription?.status || 'inactive',
+        stripeSubscriptionId: user.subscription?.stripeSubscriptionId,
+        currentPeriodEnd: user.subscription?.currentPeriodEnd,
       };
       await user.save();
     }
@@ -75,7 +77,7 @@ export async function createCheckoutSession(
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: {
-        userId: user._id.toString(),
+        userId: (user._id as any).toString(),
       },
     });
 
@@ -138,8 +140,8 @@ export async function cancelStripeSubscription(
 
     const cancelAt = subscription.cancel_at 
       ? new Date(subscription.cancel_at * 1000) 
-      : subscription.current_period_end 
-        ? new Date(subscription.current_period_end * 1000)
+      : (subscription as any).current_period_end 
+        ? new Date((subscription as any).current_period_end * 1000)
         : null;
 
     log.info('Subscription cancelled', { subscriptionId, immediate });
@@ -195,7 +197,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session): Promise
     status: 'active',
     stripeCustomerId: session.customer as string,
     stripeSubscriptionId: subscription.id,
-    currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+    currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
   };
 
   await user.save();
@@ -220,7 +222,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription): Prom
   user.subscription = {
     ...user.subscription,
     status: subscription.status as any,
-    currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+    currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
   };
 
   await user.save();
@@ -238,7 +240,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription): Pro
   user.subscription = {
     ...user.subscription,
     status: 'cancelled',
-    currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+    currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
   };
 
   await user.save();

@@ -8,7 +8,7 @@ interface EmailOptions {
 }
 
 // メール送信の基本関数（本番環境ではNodemailerやSendGridを使用）
-async function sendEmail(options: EmailOptions): Promise<void> {
+export async function sendEmail(options: EmailOptions): Promise<void> {
   log.info('Sending email', {
     to: options.to,
     subject: options.subject,

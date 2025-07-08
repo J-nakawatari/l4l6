@@ -18,29 +18,32 @@ export default function StatsChart() {
         <div className="relative w-48 h-48">
           {/* SVG Donut Chart */}
           <svg className="w-full h-full transform -rotate-90">
-            {stats.reduce((acc, stat, index) => {
-              const percentage = (stat.value / totalValue) * 100;
-              const dasharray = `${percentage} ${100 - percentage}`;
-              const dashoffset = acc;
-              
-              acc += percentage;
-              
-              return (
-                <React.Fragment key={index}>
-                  <circle
-                    cx="96"
-                    cy="96"
-                    r="72"
-                    fill="none"
-                    stroke={stat.color}
-                    strokeWidth="24"
-                    strokeDasharray={dasharray}
-                    strokeDashoffset={-dashoffset}
-                    className="transition-all duration-500"
-                  />
-                </React.Fragment>
-              );
-            }, 0)}
+            {(() => {
+              let accumulatedPercentage = 0;
+              return stats.map((stat, index) => {
+                const percentage = (stat.value / totalValue) * 100;
+                const dasharray = `${percentage} ${100 - percentage}`;
+                const dashoffset = accumulatedPercentage;
+                
+                accumulatedPercentage += percentage;
+                
+                return (
+                  <React.Fragment key={index}>
+                    <circle
+                      cx="96"
+                      cy="96"
+                      r="72"
+                      fill="none"
+                      stroke={stat.color}
+                      strokeWidth="24"
+                      strokeDasharray={dasharray}
+                      strokeDashoffset={-dashoffset}
+                      className="transition-all duration-500"
+                    />
+                  </React.Fragment>
+                );
+              });
+            })()}
           </svg>
           
           {/* Center Text */}
