@@ -11,6 +11,9 @@ servers:
   - url: https://api.example.com/api/v1
     description: Production server
 
+security:
+  - cookieAuth: []
+
 tags:
   - name: Authentication
     description: ユーザー認証関連のエンドポイント
@@ -25,7 +28,9 @@ paths:
   /health:
     get:
       summary: ヘルスチェック
+      operationId: getHealth
       tags: [Health]
+      security: []  # ヘルスチェックは認証不要
       responses:
         '200':
           description: サービスが正常に動作している
@@ -44,7 +49,9 @@ paths:
   /auth/register:
     post:
       summary: ユーザー登録
+      operationId: registerUser
       tags: [Authentication]
+      security: []  # 登録は認証不要
       requestBody:
         required: true
         content:
@@ -83,7 +90,9 @@ paths:
   /auth/login:
     post:
       summary: ユーザーログイン
+      operationId: loginUser
       tags: [Authentication]
+      security: []  # ログインは認証不要
       requestBody:
         required: true
         content:
@@ -119,6 +128,7 @@ paths:
   /auth/logout:
     post:
       summary: ログアウト
+      operationId: logoutUser
       tags: [Authentication]
       security:
         - cookieAuth: []
@@ -137,6 +147,7 @@ paths:
   /auth/refresh:
     post:
       summary: トークンリフレッシュ
+      operationId: refreshToken
       tags: [Authentication]
       requestBody:
         required: true
@@ -161,7 +172,9 @@ paths:
   /auth/verify-email:
     post:
       summary: メールアドレス確認
+      operationId: verifyEmail
       tags: [Authentication]
+      security: []  # メール確認は認証不要
       requestBody:
         required: true
         content:
@@ -181,7 +194,9 @@ paths:
   /auth/forgot-password:
     post:
       summary: パスワードリセット申請
+      operationId: forgotPassword
       tags: [Authentication]
+      security: []  # パスワードリセット申請は認証不要
       requestBody:
         required: true
         content:
@@ -202,7 +217,9 @@ paths:
   /auth/reset-password:
     post:
       summary: パスワードリセット実行
+      operationId: resetPassword
       tags: [Authentication]
+      security: []  # パスワードリセット実行は認証不要
       requestBody:
         required: true
         content:
@@ -225,7 +242,9 @@ paths:
   /admin/auth/login:
     post:
       summary: 管理者ログイン
+      operationId: adminLogin
       tags: [Admin Authentication]
+      security: []  # ログインは認証不要
       requestBody:
         required: true
         content:
@@ -254,6 +273,7 @@ paths:
   /users/profile:
     get:
       summary: プロフィール取得
+      operationId: getUserProfile
       tags: [Users]
       security:
         - cookieAuth: []
@@ -269,6 +289,7 @@ paths:
 
     put:
       summary: プロフィール更新
+      operationId: updateUserProfile
       tags: [Users]
       security:
         - cookieAuth: []
