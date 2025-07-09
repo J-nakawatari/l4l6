@@ -152,7 +152,7 @@ export default function HomePage() {
                     AIハイブリッド予想
                   </h4>
                   <p className="text-gray-600 dark:text-gray-300">
-                    3つの分析手法を組み合わせ、6つの有力候補を提示。
+                    3つの分析手法を組み合わせ、12個の有力候補を提示。
                     単一の手法では見逃す可能性も、複合的にカバー。
                   </p>
                 </div>
@@ -182,7 +182,7 @@ export default function HomePage() {
               <p className="text-gray-600 dark:text-gray-300">独自アルゴリズム</p>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">9つの</div>
+              <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">15個の</div>
               <p className="text-gray-600 dark:text-gray-300">予想数字を提示</p>
             </div>
           </div>

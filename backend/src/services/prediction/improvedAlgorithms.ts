@@ -225,7 +225,7 @@ export function generateHybridPrediction(
   }
   
   // 残りはランダムバリエーション
-  while (predictions.length < 6) {
+  while (predictions.length < 12) {
     const randomPred = generateRandomVariation(past100, usedPredictions);
     if (randomPred) {
       predictions.push(randomPred);
@@ -233,7 +233,7 @@ export function generateHybridPrediction(
     }
   }
   
-  return predictions.slice(0, 6);
+  return predictions.slice(0, 12);
 }
 
 // 従来のKakoアルゴリズム

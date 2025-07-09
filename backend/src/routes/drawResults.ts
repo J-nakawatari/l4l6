@@ -188,8 +188,8 @@ function generateAIPredictions(past100: any[]): string[] {
   // ハイブリッド予測を生成
   const hybridPredictions = generateHybridPrediction(past100, lastDraw);
   
-  // 6つの予測を返す
-  return hybridPredictions.slice(0, 6);
+  // 12個の予測を返す
+  return hybridPredictions.slice(0, 12);
 }
 
 /**

@@ -105,18 +105,18 @@ export default function DashboardPage() {
         {/* メイン予想（ハイブリッド） */}
         <div className="card p-8 mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-800">
           <h2 className="text-2xl font-bold text-center text-blue-900 dark:text-blue-100 mb-6">
-            AI ハイブリッド予想
+            AI ハイブリッド予想（12点）
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {nextPrediction.predictions.hybrid.map((number, index) => (
               <div 
                 key={index}
-                className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center shadow-md hover:shadow-lg transition-shadow"
+                className="bg-white dark:bg-gray-800 rounded-xl p-4 text-center shadow-md hover:shadow-lg transition-shadow"
               >
-                <div className="text-3xl font-bold font-mono text-blue-600 dark:text-blue-400">
+                <div className="text-2xl font-bold font-mono text-blue-600 dark:text-blue-400">
                   {number}
                 </div>
-                <div className="text-xs text-gray-500 mt-2">予想 {index + 1}</div>
+                <div className="text-xs text-gray-500 mt-1">予想 {index + 1}</div>
               </div>
             ))}
           </div>

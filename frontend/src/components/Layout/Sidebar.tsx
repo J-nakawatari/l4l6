@@ -7,7 +7,6 @@ import {
   IconDashboard,
   IconCoin,
   IconInbox,
-  IconCalendar,
   IconSettings,
   IconLogout
 } from '@tabler/icons-react';
@@ -24,7 +23,6 @@ const sidebarItems: SidebarItem[] = [
   { label: '次回予想', icon: <IconDashboard size={20} />, href: '/dashboard', section: 'main' },
   { label: 'サブスク管理', icon: <IconCoin size={20} />, href: '/subscription', section: 'main' },
   { label: 'お知らせ', icon: <IconInbox size={20} />, href: '/inbox', section: 'main' },
-  { label: 'カレンダー', icon: <IconCalendar size={20} />, href: '/calendar', section: 'main' },
   
   // Preferences
   { label: '設定', icon: <IconSettings size={20} />, href: '/settings', section: 'preferences' },
@@ -111,8 +109,21 @@ export default function Sidebar({ onClose }: SidebarProps) {
       {/* Logout */}
       <div className="py-4 border-t mt-auto">
         <button 
-          onClick={onClose}
-          className="sidebar-item w-full text-red-600 hover:bg-red-50"
+          onClick={async () => {
+            try {
+              const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/auth/logout`, {
+                method: 'POST',
+                credentials: 'include',
+              });
+              
+              if (response.ok) {
+                window.location.href = '/login';
+              }
+            } catch (error) {
+              console.error('Logout error:', error);
+            }
+          }}
+          className="sidebar-item w-full text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
         >
           <IconLogout size={20} />
           <span>ログアウト</span>
