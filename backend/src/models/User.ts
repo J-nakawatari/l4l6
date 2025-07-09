@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 
 export interface ISubscription {
   status: 'active' | 'inactive' | 'cancelled';
-  plan?: 'free' | 'basic' | 'premium';
+  plan?: 'free' | 'basic';
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   currentPeriodEnd?: Date;
@@ -82,7 +82,7 @@ const userSchema = new Schema<IUser>({
     },
     plan: {
       type: String,
-      enum: ['free', 'basic', 'premium'],
+      enum: ['free', 'basic'],
       default: 'free',
     },
     stripeCustomerId: String,

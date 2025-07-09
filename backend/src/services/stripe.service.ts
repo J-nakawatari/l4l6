@@ -204,7 +204,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session): Promise
 
   // 確認メール送信
   try {
-    await sendSubscriptionConfirmationEmail(user.email, user.name, 'プレミアムプラン');
+    await sendSubscriptionConfirmationEmail(user.email, user.name, 'ベーシックプラン');
   } catch (error) {
     log.error('Failed to send subscription confirmation email', { userId, error });
   }

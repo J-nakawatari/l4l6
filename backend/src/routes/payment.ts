@@ -22,28 +22,14 @@ const PLANS = {
   basic: {
     monthly: {
       name: 'ベーシックプラン（月額）',
-      description: 'データ分析予想、過去の予想結果閲覧、メールサポート',
+      description: '次回予想15個（AI予想12個＋個別アルゴリズム予想3個）',
       amount: 980,
       interval: 'month' as const,
     },
     yearly: {
       name: 'ベーシックプラン（年額）',
-      description: 'データ分析予想、過去の予想結果閲覧、メールサポート',
+      description: '次回予想15個（AI予想12個＋個別アルゴリズム予想3個）',
       amount: 9800,
-      interval: 'year' as const,
-    },
-  },
-  premium: {
-    monthly: {
-      name: 'プレミアムプラン（月額）',
-      description: 'AI予想＋データ分析予想、過去の予想結果閲覧、予想の詳細解説、当選確率の統計情報、優先メールサポート',
-      amount: 1980,
-      interval: 'month' as const,
-    },
-    yearly: {
-      name: 'プレミアムプラン（年額）',
-      description: 'AI予想＋データ分析予想、過去の予想結果閲覧、予想の詳細解説、当選確率の統計情報、優先メールサポート',
-      amount: 19800,
       interval: 'year' as const,
     },
   },
