@@ -32,10 +32,10 @@ jobs:
           - 6379:6379
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
@@ -48,15 +48,12 @@ jobs:
       
       - name: Install frontend dependencies
         run: npm ci --prefix frontend
-        continue-on-error: true  # フロントエンドがまだない場合のため
       
       - name: Lint backend
         run: npm run lint --prefix backend
-        continue-on-error: true  # lintスクリプトがまだない場合のため
       
       - name: Type check backend
         run: npm run type-check --prefix backend
-        continue-on-error: true  # type-checkスクリプトがまだない場合のため
       
       - name: Validate OpenAPI spec
         run: npm run openapi:validate --prefix backend
@@ -80,38 +77,34 @@ jobs:
           JWT_REFRESH_SECRET: test-refresh-secret-key
       
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./backend/coverage/lcov.info
           flags: backend
           name: backend-coverage
-        continue-on-error: true
       
       - name: Security audit
         run: |
           npm audit --prefix backend --audit-level=high
-        continue-on-error: true  # 依存関係の脆弱性チェック（警告のみ）
       
       - name: Build backend
         run: npm run build --prefix backend
-        continue-on-error: true  # buildスクリプトがまだない場合のため
 
   docker-build:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       
       - name: Build Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./backend
           push: false
           tags: l4l6-backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-        continue-on-error: true  # Dockerfileがまだない場合のため

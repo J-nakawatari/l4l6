@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { authenticate } from '../middleware/auth';
 import { DrawResult } from '../models/DrawResult';
+import { User } from '../models/User';
 import { 
   generateHybridPrediction,
   generateTransitionBasedPrediction,
@@ -583,7 +584,7 @@ router.get('/latest', authenticate, async (_req: Request, res: Response): Promis
 /**
  * 次回予想を取得
  */
-router.get('/next-prediction', authenticate, async (_req: Request, res: Response): Promise<void> => {
+router.get('/next-prediction', authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
     // 最新の抽選結果を取得
     const latestDraw = await DrawResult.findOne().sort({ drawNumber: -1 });
@@ -617,6 +618,28 @@ router.get('/next-prediction', authenticate, async (_req: Request, res: Response
     
     const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][nextDrawDate.getDay()];
     
+    // ユーザーのサブスクリプション状態を確認
+    const userId = (req as any).user?.id;
+    const user = await User.findById(userId);
+    const hasActiveSubscription = user?.hasActiveSubscription() || false;
+    
+    // サブスクリプションがない場合はダミーデータを返す
+    if (!hasActiveSubscription) {
+      res.json({
+        drawNumber: latestDraw.drawNumber + 1,
+        drawDate: nextDrawDate.toISOString(),
+        dayOfWeek,
+        predictions: {
+          hybrid: Array(12).fill('????'),
+          transition: '????',
+          correlation: '????',
+          pattern: '????'
+        },
+        hasSubscription: false
+      });
+      return;
+    }
+    
     res.json({
       drawNumber: latestDraw.drawNumber + 1,
       drawDate: nextDrawDate.toISOString(),
@@ -626,7 +649,8 @@ router.get('/next-prediction', authenticate, async (_req: Request, res: Response
         transition: transitionPrediction || '0000',
         correlation: correlationPrediction || '0000',
         pattern: patternPrediction || '0000'
-      }
+      },
+      hasSubscription: true
     });
     
   } catch (error) {

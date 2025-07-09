@@ -14,6 +14,23 @@ interface NextPrediction {
     correlation: string;
     pattern: string;
   };
+  hasSubscription?: boolean;
+}
+
+interface User {
+  _id: string;
+  email: string;
+  name: string;
+  subscription?: {
+    status: 'active' | 'inactive' | 'cancelled';
+    plan?: 'free' | 'basic';
+  };
+}
+
+interface PriceInfo {
+  amount: number;
+  currency: string;
+  interval: string;
 }
 
 const dayOfWeekMap: Record<string, string> = {
@@ -30,10 +47,34 @@ export default function DashboardPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [nextPrediction, setNextPrediction] = useState<NextPrediction | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [priceInfo, setPriceInfo] = useState<PriceInfo | null>(null);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   useEffect(() => {
+    fetchUserProfile();
     fetchNextPrediction();
+    fetchPriceInfo();
   }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/users/me`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
 
   const fetchNextPrediction = async () => {
     try {
@@ -62,6 +103,52 @@ export default function DashboardPage() {
     }
   };
 
+  const fetchPriceInfo = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/payment/price-info/price_1RieIg1qmMqgQ3qQ4PbwxTfq`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPriceInfo(data);
+      }
+    } catch (error) {
+      console.error('Error fetching price info:', error);
+    }
+  };
+
+  const handleSubscribe = async () => {
+    setIsCheckingOut(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/payment/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          priceId: 'price_1RieIg1qmMqgQ3qQ4PbwxTfq'
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        window.location.href = data.url;
+      } else {
+        alert('チェックアウトセッションの作成に失敗しました');
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      alert('エラーが発生しました');
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -81,6 +168,8 @@ export default function DashboardPage() {
       </DashboardLayout>
     );
   }
+
+  const hasSubscription = nextPrediction.hasSubscription;
 
   return (
     <DashboardLayout>
@@ -102,8 +191,35 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* サブスク未加入の場合のCTA */}
+        {!hasSubscription && (
+          <div className="mb-8 p-6 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-lg text-center">
+            <h3 className="text-xl font-bold text-yellow-800 dark:text-yellow-200 mb-2">
+              サブスク加入で次回の予想が確認できます
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              AIが分析した高精度な予想を毎回ご利用いただけます
+            </p>
+            <button
+              onClick={handleSubscribe}
+              disabled={isCheckingOut}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCheckingOut ? '処理中...' : `サブスク加入する（${priceInfo ? `月額${priceInfo.amount}円` : '月額980円'}）`}
+            </button>
+          </div>
+        )}
+
         {/* メイン予想（ハイブリッド） */}
-        <div className="card p-8 mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-800">
+        <div className={`card p-8 mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-800 relative overflow-hidden`}>
+          {!hasSubscription && (
+            <div className="absolute inset-0 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md z-10 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">サブスク限定コンテンツ</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">予想を見るにはサブスクリプションが必要です</div>
+              </div>
+            </div>
+          )}
           <h2 className="text-2xl font-bold text-center text-blue-900 dark:text-blue-100 mb-6">
             AI ハイブリッド予想（12点）
           </h2>
@@ -123,7 +239,15 @@ export default function DashboardPage() {
         </div>
 
         {/* サブ予想 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+          {!hasSubscription && (
+            <div className="absolute inset-0 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md z-10 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-2">サブスク限定コンテンツ</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">個別アルゴリズム予想もご利用いただけます</div>
+              </div>
+            </div>
+          )}
           {/* 遷移確率ベース */}
           <div className="card p-6">
             <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">
