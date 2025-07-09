@@ -210,6 +210,11 @@ router.get('/subscription-status', authMiddleware, async (req: any, res): Promis
 
 // Stripe Webhook
 router.post('/webhook', async (req, res): Promise<void> => {
+  console.log('Webhook received:', {
+    headers: req.headers,
+    bodyLength: req.body?.length,
+  });
+  
   const sig = req.headers['stripe-signature'] as string;
   
   let event: Stripe.Event;
@@ -221,10 +226,20 @@ router.post('/webhook', async (req, res): Promise<void> => {
       process.env.STRIPE_WEBHOOK_SECRET || ''
     );
   } catch (err) {
-    console.error('Webhook signature verification failed:', err);
+    console.error('Webhook signature verification failed:', {
+      error: err,
+      signature: sig,
+      webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ? 'Set' : 'Not set',
+    });
     res.status(400).json({ error: 'Webhook signature verification failed' });
     return;
   }
+
+  console.log('Webhook event received:', {
+    type: event.type,
+    id: event.id,
+    created: new Date(event.created * 1000),
+  });
 
   // イベントを処理
   switch (event.type) {
@@ -254,9 +269,19 @@ router.post('/webhook', async (req, res): Promise<void> => {
             },
           });
 
-          console.log(`Subscription activated for user ${userId}`);
+          console.log(`Subscription activated for user ${userId}`, {
+            planId,
+            billingPeriod,
+            expiresAt,
+            customerId: session.customer,
+            subscriptionId: session.subscription,
+          });
         } catch (error) {
-          console.error('Failed to update user subscription:', error);
+          console.error('Failed to update user subscription:', {
+            error,
+            userId,
+            sessionId: session.id,
+          });
         }
       }
       break;
