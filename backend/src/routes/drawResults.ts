@@ -1,6 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { authenticate } from '../middleware/auth';
 import { DrawResult } from '../models/DrawResult';
+import { 
+  generateHybridPrediction,
+  generateTransitionBasedPrediction,
+  generateCorrelationBasedPrediction,
+  generatePatternBasedPrediction
+} from '../services/prediction/improvedAlgorithms';
 
 const router = Router();
 
@@ -173,70 +179,17 @@ router.get('/history-with-prediction', authenticate, async (req: Request, res: R
 });
 
 /**
- * AI予想を生成（固定シード使用）
+ * AI予想を生成（改善されたハイブリッドアルゴリズム）
  */
-function generateAIPredictions(past100: any[], drawNumber: number): string[] {
-  // 頻度計算
-  const freq: Record<string, number>[] = [{}, {}, {}, {}];
+function generateAIPredictions(past100: any[]): string[] {
+  // 最新の抽選結果を取得
+  const lastDraw = past100[0];
   
-  past100.forEach(d => {
-    const n = d.winningNumber;
-    for (let i = 0; i < 4; i++) {
-      const digit = n[i];
-      freq[i]![digit] = (freq[i]![digit] || 0) + 1;
-    }
-  });
+  // ハイブリッド予測を生成
+  const hybridPredictions = generateHybridPrediction(past100, lastDraw);
   
-  // 抽選回数をシードとして使用
-  let seed = drawNumber;
-  const random = () => {
-    seed = (seed * 9301 + 49297) % 233280;
-    return seed / 233280;
-  };
-  
-  const predictions: string[] = [];
-  const usedCombinations = new Set<string>();
-  
-  // 頻度ベースの予想を3つ
-  for (let j = 0; j < 3; j++) {
-    let prediction = '';
-    for (let i = 0; i < 4; i++) {
-      const sorted = Object.entries(freq[i]!).sort((a, b) => (b[1] as number) - (a[1] as number));
-      // 上位3つからランダムに選択
-      const topDigits = sorted.slice(0, 3).map(s => s[0]);
-      const randomIndex = Math.floor(random() * topDigits.length);
-      prediction += topDigits[randomIndex] || '0';
-    }
-    
-    if (!usedCombinations.has(prediction)) {
-      predictions.push(prediction);
-      usedCombinations.add(prediction);
-    }
-  }
-  
-  // 残りはランダム要素を加えた予想
-  while (predictions.length < 6) {
-    let prediction = '';
-    for (let i = 0; i < 4; i++) {
-      if (random() < 0.7) {
-        // 70%の確率で頻度ベース
-        const sorted = Object.entries(freq[i]!).sort((a, b) => (b[1] as number) - (a[1] as number));
-        const topDigits = sorted.slice(0, 5).map(s => s[0]);
-        const randomIndex = Math.floor(random() * topDigits.length);
-        prediction += topDigits[randomIndex] || '0';
-      } else {
-        // 30%の確率でランダム
-        prediction += Math.floor(random() * 10).toString();
-      }
-    }
-    
-    if (!usedCombinations.has(prediction)) {
-      predictions.push(prediction);
-      usedCombinations.add(prediction);
-    }
-  }
-  
-  return predictions;
+  // 6つの予測を返す
+  return hybridPredictions.slice(0, 6);
 }
 
 /**
@@ -323,7 +276,7 @@ router.get('/history-with-all-predictions', authenticate, async (req: Request, r
       }
 
       // AI予想を生成
-      const aiPredictions = generateAIPredictions(past100, currentDraw.drawNumber);
+      const aiPredictions = generateAIPredictions(past100);
       
       // AI予想の当選チェック
       const aiWins: Array<{ prediction: string; winType: 'straight' | 'box' | null; winAmount: number }> = [];
@@ -622,6 +575,64 @@ router.get('/latest', authenticate, async (_req: Request, res: Response): Promis
     console.error('Error fetching latest draw:', error);
     res.status(500).json({ 
       error: 'Failed to fetch latest draw',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * 次回予想を取得
+ */
+router.get('/next-prediction', authenticate, async (_req: Request, res: Response): Promise<void> => {
+  try {
+    // 最新の抽選結果を取得
+    const latestDraw = await DrawResult.findOne().sort({ drawNumber: -1 });
+    
+    if (!latestDraw) {
+      res.status(404).json({ error: 'No draw results found' });
+      return;
+    }
+    
+    // 過去100回のデータを取得
+    const past100 = await DrawResult.find({
+      drawNumber: { $lte: latestDraw.drawNumber }
+    }).sort({ drawNumber: -1 }).limit(100);
+    
+    if (past100.length < 100) {
+      res.status(400).json({ error: 'Not enough historical data' });
+      return;
+    }
+    
+    // 各アルゴリズムで予測を生成
+    const hybridPredictions = generateHybridPrediction(past100, latestDraw);
+    const transitionPrediction = generateTransitionBasedPrediction(past100, latestDraw);
+    const correlationPrediction = generateCorrelationBasedPrediction(past100);
+    const patternPrediction = generatePatternBasedPrediction(past100);
+    
+    // 次回の抽選日を計算（月曜日から金曜日）
+    const nextDrawDate = new Date(latestDraw.drawDate);
+    do {
+      nextDrawDate.setDate(nextDrawDate.getDate() + 1);
+    } while (nextDrawDate.getDay() === 0 || nextDrawDate.getDay() === 6); // 土日をスキップ
+    
+    const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][nextDrawDate.getDay()];
+    
+    res.json({
+      drawNumber: latestDraw.drawNumber + 1,
+      drawDate: nextDrawDate.toISOString(),
+      dayOfWeek,
+      predictions: {
+        hybrid: hybridPredictions,
+        transition: transitionPrediction || '0000',
+        correlation: correlationPrediction || '0000',
+        pattern: patternPrediction || '0000'
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error fetching next prediction:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch next prediction',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

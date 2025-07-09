@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   IconDashboard,
-  IconHome,
   IconCoin,
   IconInbox,
   IconCalendar,
@@ -22,8 +21,7 @@ interface SidebarItem {
 
 const sidebarItems: SidebarItem[] = [
   // Main Menu
-  { label: 'Dashboard', icon: <IconDashboard size={20} />, href: '/dashboard', section: 'main' },
-  { label: '予想結果一覧', icon: <IconHome size={20} />, href: '/predictions/history', section: 'main' },
+  { label: '次回予想', icon: <IconDashboard size={20} />, href: '/dashboard', section: 'main' },
   { label: 'サブスク管理', icon: <IconCoin size={20} />, href: '/subscription', section: 'main' },
   { label: 'お知らせ', icon: <IconInbox size={20} />, href: '/inbox', section: 'main' },
   { label: 'カレンダー', icon: <IconCalendar size={20} />, href: '/calendar', section: 'main' },
