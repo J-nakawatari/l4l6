@@ -12,12 +12,7 @@ export default function HomePage() {
       <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">N4</span>
-              </div>
-              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Numbers4 AI予想</h1>
-            </div>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Numbers4 AI予想</h1>
             <div className="space-x-4">
               <button
                 onClick={() => router.push('/login')}
@@ -49,18 +44,12 @@ export default function HomePage() {
             ナンバーズ4の次回予想を提示します
           </p>
           
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center">
             <button
               onClick={() => router.push('/register')}
               className="px-8 py-4 bg-blue-600 text-white text-lg font-bold rounded-lg hover:bg-blue-700 transition shadow-lg hover:shadow-xl"
             >
               今すぐ予想を見る
-            </button>
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="px-8 py-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-lg font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
-            >
-              デモを見る
             </button>
           </div>
         </section>

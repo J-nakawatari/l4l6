@@ -40,12 +40,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <IconMenu2 size={24} />
             </button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">N4</span>
-              </div>
-              <span className="font-semibold text-lg">Numbers4</span>
-            </div>
+            <span className="font-semibold text-lg">Numbers4</span>
             <div className="w-10" /> {/* バランス用のスペーサー */}
           </div>
         </div>

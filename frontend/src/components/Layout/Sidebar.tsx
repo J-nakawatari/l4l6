@@ -38,12 +38,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
       {/* Logo */}
       <div className="px-6 py-6 border-b">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">N4</span>
-            </div>
-            <span className="font-semibold text-xl">Numbers4</span>
-          </div>
+          <span className="font-semibold text-xl">Numbers4</span>
           {/* モバイル用閉じるボタン */}
           {onClose && (
             <button
