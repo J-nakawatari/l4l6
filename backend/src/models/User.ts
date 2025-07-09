@@ -132,11 +132,13 @@ userSchema.methods.hasActiveSubscription = function(): boolean {
     return false;
   }
   
-  if (!this.subscription.currentPeriodEnd) {
+  // currentPeriodEndまたはexpiresAtをチェック
+  const expirationDate = this.subscription.currentPeriodEnd || this.subscription.expiresAt;
+  if (!expirationDate) {
     return false;
   }
   
-  return this.subscription.currentPeriodEnd > new Date();
+  return expirationDate > new Date();
 };
 
 // 静的メソッド

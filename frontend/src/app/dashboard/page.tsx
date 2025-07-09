@@ -55,6 +55,17 @@ export default function DashboardPage() {
     fetchUserProfile();
     fetchNextPrediction();
     fetchPriceInfo();
+    
+    // URLパラメータから購入成功を確認
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+      const sessionId = urlParams.get('session_id');
+      if (sessionId) {
+        confirmSubscription(sessionId);
+      }
+      // パラメータをクリア
+      window.history.replaceState({}, '', '/dashboard');
+    }
   }, []);
 
   const fetchUserProfile = async () => {
@@ -137,7 +148,12 @@ export default function DashboardPage() {
 
       if (response.ok) {
         const data = await response.json();
-        window.location.href = data.url;
+        // 開発環境の場合はdevModeがtrueになる
+        if (data.devMode) {
+          window.location.href = data.url;
+        } else {
+          window.location.href = data.url;
+        }
       } else {
         alert('チェックアウトセッションの作成に失敗しました');
       }
@@ -146,6 +162,27 @@ export default function DashboardPage() {
       alert('エラーが発生しました');
     } finally {
       setIsCheckingOut(false);
+    }
+  };
+
+  const confirmSubscription = async (sessionId: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/payments/confirm-subscription`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ sessionId }),
+      });
+
+      if (response.ok) {
+        // サブスクリプション確認後、データを再取得
+        await fetchUserProfile();
+        await fetchNextPrediction();
+      }
+    } catch (error) {
+      console.error('Error confirming subscription:', error);
     }
   };
 

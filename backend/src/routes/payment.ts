@@ -68,6 +68,27 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
     const userId = req.user._id;
     const userEmail = req.user.email;
 
+    // 開発環境では即座にサブスクリプションを有効化（一時的な対応）
+    if (process.env.NODE_ENV === 'development') {
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+      await User.findByIdAndUpdate(userId, {
+        subscription: {
+          status: 'active',
+          plan: 'basic',
+          currentPeriodEnd: expiresAt,
+          expiresAt,
+        },
+      });
+
+      res.json({ 
+        url: `${process.env.FRONTEND_URL}/dashboard?success=true`,
+        devMode: true 
+      });
+      return;
+    }
+
     let lineItems;
     
     // priceIdが提供された場合は既存の価格IDを使用
@@ -110,39 +131,89 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
       ];
     }
 
-    // Stripeチェックアウトセッションを作成
+    // チェックアウトセッションを作成
     const session = await getStripe().checkout.sessions.create({
-      mode: 'subscription',
       payment_method_types: ['card'],
-      customer_email: userEmail,
       line_items: lineItems,
-      success_url: `${process.env.FRONTEND_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/subscription`,
+      mode: 'subscription',
+      success_url: `${process.env.FRONTEND_URL}/dashboard?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/subscription?canceled=true`,
+      customer_email: userEmail,
       metadata: {
         userId: userId.toString(),
-        planId,
-        billingPeriod,
+        planId: planId || 'basic',
+        billingPeriod: billingPeriod || 'monthly',
       },
     });
 
-    res.json({ 
-      sessionId: session.id,
-      url: session.url 
-    });
+    res.json({ url: session.url });
   } catch (error) {
-    console.error('Checkout session creation error:', error);
-    res.status(500).json({ 
-      error: 'Failed to create checkout session'
-    });
+    console.error('Failed to create checkout session:', error);
+    res.status(500).json({ error: 'Failed to create checkout session' });
   }
 });
 
-// Stripe Webhookハンドラー
+// 購入成功確認（フォールバック）
+router.post('/confirm-subscription', authMiddleware, async (req: any, res): Promise<void> => {
+  try {
+    const { sessionId } = req.body;
+    const userId = req.user._id;
+
+    if (!sessionId) {
+      res.status(400).json({ error: 'Session ID is required' });
+      return;
+    }
+
+    // Stripeからセッション情報を取得
+    const session = await getStripe().checkout.sessions.retrieve(sessionId);
+
+    if (session.payment_status === 'paid' && session.metadata?.userId === userId.toString()) {
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+      await User.findByIdAndUpdate(userId, {
+        subscription: {
+          status: 'active',
+          plan: session.metadata.planId || 'basic',
+          stripeCustomerId: session.customer as string,
+          stripeSubscriptionId: session.subscription as string,
+          currentPeriodEnd: expiresAt,
+          expiresAt,
+        },
+      });
+
+      res.json({ success: true });
+    } else {
+      res.status(400).json({ error: 'Invalid session or payment not completed' });
+    }
+  } catch (error) {
+    console.error('Failed to confirm subscription:', error);
+    res.status(500).json({ error: 'Failed to confirm subscription' });
+  }
+});
+
+// サブスクリプション情報取得（デバッグ用）
+router.get('/subscription-status', authMiddleware, async (req: any, res): Promise<void> => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId).select('subscription');
+    
+    res.json({
+      subscription: user?.subscription,
+      hasActiveSubscription: user?.hasActiveSubscription()
+    });
+  } catch (error) {
+    console.error('Failed to get subscription status:', error);
+    res.status(500).json({ error: 'Failed to get subscription status' });
+  }
+});
+
+// Stripe Webhook
 router.post('/webhook', async (req, res): Promise<void> => {
   const sig = req.headers['stripe-signature'] as string;
-
+  
   let event: Stripe.Event;
-
+  
   try {
     event = getStripe().webhooks.constructEvent(
       req.body,
@@ -176,11 +247,14 @@ router.post('/webhook', async (req, res): Promise<void> => {
             subscription: {
               status: 'active',
               plan: planId,
-              stripeSubscriptionId: session.subscription,
+              stripeCustomerId: session.customer as string,
+              stripeSubscriptionId: session.subscription as string,
+              currentPeriodEnd: expiresAt,
               expiresAt,
             },
           });
 
+          console.log(`Subscription activated for user ${userId}`);
         } catch (error) {
           console.error('Failed to update user subscription:', error);
         }
