@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import {
   IconDashboard,
   IconCoin,
-  IconInbox,
   IconSettings,
   IconLogout
 } from '@tabler/icons-react';
@@ -22,7 +21,6 @@ const sidebarItems: SidebarItem[] = [
   // Main Menu
   { label: '次回予想', icon: <IconDashboard size={20} />, href: '/dashboard', section: 'main' },
   { label: 'サブスク管理', icon: <IconCoin size={20} />, href: '/subscription', section: 'main' },
-  { label: 'お知らせ', icon: <IconInbox size={20} />, href: '/inbox', section: 'main' },
   
   // Preferences
   { label: '設定', icon: <IconSettings size={20} />, href: '/settings', section: 'preferences' },
@@ -123,7 +121,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
               console.error('Logout error:', error);
             }
           }}
-          className="sidebar-item w-full text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+          className="flex items-center gap-3 px-6 py-3 w-full text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-150 cursor-pointer"
         >
           <IconLogout size={20} />
           <span>ログアウト</span>
