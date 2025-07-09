@@ -46,7 +46,12 @@ router.get('/price-info/:priceId', async (req, res): Promise<void> => {
     });
   } catch (error) {
     console.error('Failed to retrieve price:', error);
-    res.status(500).json({ error: 'Failed to retrieve price information' });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ 
+      error: 'Failed to retrieve price information',
+      message: errorMessage,
+      priceId: req.params.priceId
+    });
   }
 });
 

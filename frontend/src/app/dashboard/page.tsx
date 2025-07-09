@@ -105,7 +105,7 @@ export default function DashboardPage() {
 
   const fetchPriceInfo = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/payment/price-info/price_1RieIg1qmMqgQ3qQ4PbwxTfq`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/payments/price-info/price_1RieIg1qmMqgQ3qQ4PbwxTfq`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +124,7 @@ export default function DashboardPage() {
   const handleSubscribe = async () => {
     setIsCheckingOut(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/payment/create-checkout-session`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/payments/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
