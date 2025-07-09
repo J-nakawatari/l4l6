@@ -13,10 +13,7 @@ const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 interface Plan {
   id: string;
   name: string;
-  price: {
-    monthly: number;
-    yearly: number;
-  };
+  price: number;
   features: string[];
   recommended?: boolean;
 }
@@ -31,15 +28,13 @@ const plans: Plan[] = [
   {
     id: 'basic',
     name: 'ベーシックプラン',
-    price: {
-      monthly: 980,
-      yearly: 9800,
-    },
+    price: 980,
     features: [
-      '次回予想15個を表示',
+      '次回予想15個を毎日更新',
       'AIハイブリッド予想（12個）',
-      '個別アルゴリズム予想（3個）',
-      'メールサポート',
+      '遷移確率予想（1個）',
+      '位置相関予想（1個）',
+      'パターン予想（1個）',
     ],
     recommended: true,
   },
@@ -47,7 +42,6 @@ const plans: Plan[] = [
 
 export default function SubscriptionPage() {
   const router = useRouter();
-  const [isYearly, setIsYearly] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,7 +82,7 @@ export default function SubscriptionPage() {
         credentials: 'include',
         body: JSON.stringify({
           planId,
-          billingPeriod: isYearly ? 'yearly' : 'monthly',
+          billingPeriod: 'monthly',
         }),
       });
 
@@ -136,21 +130,6 @@ export default function SubscriptionPage() {
           </div>
         )}
 
-        {/* 料金プラン切り替え */}
-        <div className="flex items-center justify-center mb-6 sm:mb-8">
-          <span className={`mr-3 ${!isYearly ? 'font-semibold' : ''}`}>月額プラン</span>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={isYearly}
-              onChange={(e) => setIsYearly(e.target.checked)}
-              className="sr-only peer"
-              aria-label="年間プラン"
-            />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-          </label>
-          <span className={`ml-3 ${isYearly ? 'font-semibold' : ''}`}>年間プラン</span>
-        </div>
 
         {/* エラーメッセージ */}
         {error && (
@@ -160,7 +139,7 @@ export default function SubscriptionPage() {
         )}
 
         {/* プラン一覧 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+        <div className="max-w-md mx-auto">
           {plans.map((plan) => (
             <div
               key={plan.id}
@@ -181,18 +160,7 @@ export default function SubscriptionPage() {
 
               <div className="mb-6">
                 <p className="text-3xl sm:text-4xl font-bold text-gray-900">
-                  {isYearly ? (
-                    <>
-                      年額 {plan.price.yearly.toLocaleString()}円
-                      {plan.price.yearly < plan.price.monthly * 12 && (
-                        <span className="text-sm text-green-600 block">
-                          2ヶ月分お得！
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <>月額 {plan.price.monthly.toLocaleString()}円</>
-                  )}
+                  月額 {plan.price.toLocaleString()}円
                 </p>
               </div>
 

@@ -21,16 +21,10 @@ function getStripe(): Stripe {
 const PLANS = {
   basic: {
     monthly: {
-      name: 'ベーシックプラン（月額）',
-      description: '次回予想15個（AI予想12個＋個別アルゴリズム予想3個）',
+      name: 'ベーシックプラン',
+      description: '次回予想15個（AIハイブリッド予想12個＋個別アルゴリズム予想3個）',
       amount: 980,
       interval: 'month' as const,
-    },
-    yearly: {
-      name: 'ベーシックプラン（年額）',
-      description: '次回予想15個（AI予想12個＋個別アルゴリズム予想3個）',
-      amount: 9800,
-      interval: 'year' as const,
     },
   },
 };
@@ -91,7 +85,7 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
         return;
       }
 
-      const planInfo = PLANS[planId as keyof typeof PLANS][billingPeriod as 'monthly' | 'yearly'];
+      const planInfo = PLANS[planId as keyof typeof PLANS]['monthly'];
       
       lineItems = [
         {
