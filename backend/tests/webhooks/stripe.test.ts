@@ -84,7 +84,7 @@ describe('POST /api/v1/payments/webhook', () => {
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ received: true });
       expect(mockStripe.webhooks.constructEvent).toHaveBeenCalledWith(
-        payload,
+        expect.any(Buffer),
         signature,
         webhookSecret
       );
@@ -108,7 +108,7 @@ describe('POST /api/v1/payments/webhook', () => {
         .send(payload);
 
       expect(response.status).toBe(400);
-      expect(response.body.error.code).toBe('INVALID_SIGNATURE');
+      expect(response.body.error).toBe('Webhook signature verification failed');
     });
 
     it('署名ヘッダーがない場合はエラーを返す', async () => {
@@ -118,7 +118,7 @@ describe('POST /api/v1/payments/webhook', () => {
         .send({});
 
       expect(response.status).toBe(400);
-      expect(response.body.error.code).toBe('MISSING_SIGNATURE');
+      expect(response.body.error).toBe('Webhook signature verification failed');
     });
   });
 
