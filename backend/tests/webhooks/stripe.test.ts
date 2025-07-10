@@ -133,7 +133,7 @@ describe('POST /api/v1/payments/webhook', () => {
         customer: 'cus_test_123',
         subscription: 'sub_test_123',
         metadata: {
-          userId: (user as any)._id.toString(),
+          userId: user._id.toString(),
         },
       };
 
@@ -459,7 +459,7 @@ describe('POST /api/v1/payments/webhook', () => {
             customer: 'cus_test_123',
             subscription: 'sub_test_123',
             metadata: {
-              userId: (user as any)._id.toString(),
+              userId: user._id.toString(),
             },
           },
         },

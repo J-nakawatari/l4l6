@@ -32,7 +32,7 @@ describe('User Model', () => {
 
       const user = await User.create(userData);
 
-      expect((user as any)._id).toBeDefined();
+      expect(user._id).toBeDefined();
       expect(user.email).toBe(userData.email);
       expect(user.name).toBe(userData.name);
       expect(user.role).toBe('user');
@@ -103,7 +103,7 @@ describe('User Model', () => {
 
       await user.save();
 
-      const updatedUser = await User.findById((user as any)._id);
+      const updatedUser = await User.findById(user._id);
       expect(updatedUser?.subscription?.status).toBe('active');
       expect(updatedUser?.subscription?.stripeCustomerId).toBe('cus_test123');
     });

@@ -42,8 +42,8 @@ describe('POST /api/v1/auth/logout', () => {
       // Cookieがクリアされているか確認
       const cookies = response.headers['set-cookie'];
       expect(cookies).toBeDefined();
-      expect(cookies[0]).toContain('token=;');
-      expect(cookies[0]).toContain('Max-Age=0');
+      expect(cookies![0]).toContain('token=;');
+      expect(cookies![0]).toContain('Max-Age=0');
     });
 
     it('ログアウト後は認証が必要なエンドポイントにアクセスできない', async () => {
@@ -70,7 +70,8 @@ describe('POST /api/v1/auth/logout', () => {
         });
 
       const refreshToken = loginResponse.body.refreshToken;
-      const token = loginResponse.headers['set-cookie'][0].split(';')[0].split('=')[1];
+      const cookies = loginResponse.headers['set-cookie'] as string[];
+      const token = cookies[0].split(';')[0].split('=')[1];
 
       // ログアウト
       await request(app)
@@ -129,7 +130,8 @@ describe('POST /api/v1/auth/logout', () => {
           email: testUser.email,
           password: 'SecurePass123!',
         });
-      const device1Token = device1Login.headers['set-cookie'][0].split(';')[0].split('=')[1];
+      const device1Cookies = device1Login.headers['set-cookie'] as string[];
+      const device1Token = device1Cookies[0].split(';')[0].split('=')[1];
 
       // デバイス2でログイン
       const device2Login = await request(app)

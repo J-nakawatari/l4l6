@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 import bcrypt from 'bcrypt';
 
 export interface ISubscription {
@@ -10,7 +10,7 @@ export interface ISubscription {
   expiresAt?: Date;
 }
 
-export interface IUser extends Document {
+export interface IUser extends Document<Types.ObjectId> {
   email: string;
   password: string;
   name: string;

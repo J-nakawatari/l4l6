@@ -2,7 +2,6 @@ import request from 'supertest';
 import app from '../../src/app';
 import { connectTestDB, closeTestDB, clearTestDB } from '../helpers/db';
 import { createUser } from '../factories/user.factory';
-import { User } from '../../src/models/User';
 
 beforeAll(async () => {
   await connectTestDB();
@@ -49,9 +48,10 @@ describe('POST /api/v1/auth/login', () => {
       // JWTトークンがCookieに設定されているか確認
       const cookies = response.headers['set-cookie'];
       expect(cookies).toBeDefined();
-      expect(cookies[0]).toContain('token=');
-      expect(cookies[0]).toContain('HttpOnly');
-      expect(cookies[0]).toContain('SameSite=Lax');
+      expect(cookies).toBeDefined();
+      expect(cookies![0]).toContain('token=');
+      expect(cookies![0]).toContain('HttpOnly');
+      expect(cookies![0]).toContain('SameSite=Lax');
     });
 
     it('リフレッシュトークンも返される', async () => {
@@ -178,7 +178,10 @@ describe('POST /api/v1/auth/login', () => {
       const rateLimited = responses.filter(r => r.status === 429);
       
       expect(rateLimited.length).toBeGreaterThan(0);
-      expect(rateLimited[0].body.error.code).toBe('RATE_LIMIT_EXCEEDED');
+      expect(rateLimited.length).toBeGreaterThan(0);
+      if (rateLimited.length > 0) {
+        expect(rateLimited[0].body.error.code).toBe('RATE_LIMIT_EXCEEDED');
+      }
     });
 
     it('成功したログインはレート制限にカウントされない', async () => {
