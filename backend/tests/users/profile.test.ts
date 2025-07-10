@@ -34,7 +34,7 @@ describe('GET /api/v1/users/profile', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.user).toMatchObject({
-        id: user._id.toString(),
+        id: (user as any)._id.toString(),
         email: user.email,
         name: user.name,
         role: user.role,

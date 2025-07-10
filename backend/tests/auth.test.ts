@@ -7,7 +7,8 @@ describe('POST /api/v1/auth/register', () => {
       .post('/api/v1/auth/register')
       .send({
         email: 'test@example.com',
-        password: 'SecurePass123!'
+        password: 'SecurePass123!',
+        name: 'Test User'
       });
     
     expect(response.status).toBe(201);

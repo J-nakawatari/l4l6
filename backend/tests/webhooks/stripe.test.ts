@@ -40,8 +40,8 @@ afterEach(async () => {
   jest.clearAllMocks();
 });
 
-describe('POST /api/v1/webhook/stripe', () => {
-  const webhookEndpoint = '/api/v1/webhook/stripe';
+describe('POST /api/v1/payments/webhook', () => {
+  const webhookEndpoint = '/api/v1/payments/webhook';
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_secret';
 
   // Stripeの署名を生成するヘルパー関数

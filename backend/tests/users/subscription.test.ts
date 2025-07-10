@@ -57,8 +57,8 @@ afterEach(async () => {
   await clearTestDB();
 });
 
-describe('POST /api/v1/subscribe/checkout', () => {
-  const checkoutEndpoint = '/api/v1/subscribe/checkout';
+describe('POST /api/v1/payments/create-checkout-session', () => {
+  const checkoutEndpoint = '/api/v1/payments/create-checkout-session';
   
   describe('正常系', () => {
     it('Stripe Checkoutセッションを作成できる', async () => {
@@ -161,8 +161,8 @@ describe('POST /api/v1/subscribe/checkout', () => {
   });
 });
 
-describe('POST /api/v1/subscribe/portal', () => {
-  const portalEndpoint = '/api/v1/subscribe/portal';
+describe('POST /api/v1/payments/portal', () => {
+  const portalEndpoint = '/api/v1/payments/portal';
   
   describe('正常系', () => {
     it('Billing Portalセッションを作成できる', async () => {
@@ -220,8 +220,8 @@ describe('POST /api/v1/subscribe/portal', () => {
   });
 });
 
-describe('GET /api/v1/users/subscription', () => {
-  const subscriptionEndpoint = '/api/v1/users/subscription';
+describe('GET /api/v1/payments/subscription-status', () => {
+  const subscriptionEndpoint = '/api/v1/payments/subscription-status';
   
   describe('正常系', () => {
     it('サブスクリプション情報を取得できる', async () => {
@@ -293,8 +293,8 @@ describe('GET /api/v1/users/subscription', () => {
   });
 });
 
-describe('POST /api/v1/subscribe/cancel', () => {
-  const cancelEndpoint = '/api/v1/subscribe/cancel';
+describe('POST /api/v1/payments/cancel-subscription', () => {
+  const cancelEndpoint = '/api/v1/payments/cancel-subscription';
   
   describe('正常系', () => {
     it('サブスクリプションをキャンセルできる', async () => {
