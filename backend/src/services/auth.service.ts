@@ -250,6 +250,26 @@ export class AuthService {
     }
   }
 
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    // ユーザーを取得
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+    }
+
+    // 現在のパスワードを検証
+    const isValid = await user.comparePassword(currentPassword);
+    if (!isValid) {
+      throw new AppError('現在のパスワードが正しくありません', 401, 'INVALID_PASSWORD');
+    }
+
+    // 新しいパスワードを設定
+    user.password = newPassword;
+    await user.save();
+
+    log.info('Password changed successfully', { userId });
+  }
+
   // タイミング攻撃対策用のダミー処理
   private async fakePasswordCompare(): Promise<void> {
     // const dummyHash = '$2b$10$dummyhash1234567890abcdefghijklmnopqrstuvwxyz';

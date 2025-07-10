@@ -25,6 +25,7 @@ RouteRegistry.register('POST', '/api/v1/auth/refresh');
 RouteRegistry.register('POST', '/api/v1/auth/verify-email');
 RouteRegistry.register('POST', '/api/v1/auth/forgot-password');
 RouteRegistry.register('POST', '/api/v1/auth/reset-password');
+RouteRegistry.register('POST', '/api/v1/auth/change-password');
 
 // ユーザー登録
 router.post('/register', 
@@ -145,6 +146,32 @@ router.post('/reset-password',
     try {
       await authService.resetPassword(req.body.token, req.body.password);
       res.status(200).json({ message: 'Password reset successful' });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// パスワード変更
+router.post('/change-password',
+  authenticate,
+  async (req, res, next) => {
+    try {
+      const userId = (req as any).user!.id;
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        res.status(400).json({ error: '現在のパスワードと新しいパスワードは必須です' });
+        return;
+      }
+
+      if (newPassword.length < 8) {
+        res.status(400).json({ error: 'パスワードは8文字以上で設定してください' });
+        return;
+      }
+
+      await authService.changePassword(userId, currentPassword, newPassword);
+      res.status(200).json({ message: 'パスワードを変更しました' });
     } catch (error) {
       next(error);
     }
