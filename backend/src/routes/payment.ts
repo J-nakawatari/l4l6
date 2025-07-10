@@ -98,8 +98,7 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
 
       res.json({ 
         sessionId: 'cs_test_123',
-        url: `${process.env.FRONTEND_URL}/dashboard?success=true`,
-        devMode: true 
+        url: 'https://checkout.stripe.com/pay/cs_test_123'
       });
       return;
     }
