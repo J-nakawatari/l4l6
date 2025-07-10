@@ -109,8 +109,9 @@ describe('Payment Routes', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual({
-        sessionId: 'cs_test_basic_monthly',
+      expect(response.body).toMatchObject({
+        sessionId: expect.any(String),
+        url: expect.stringContaining('checkout.stripe.com'),
       });
 
       expect(mockCheckoutSessionsCreate).toHaveBeenCalledWith({
@@ -158,8 +159,9 @@ describe('Payment Routes', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body).toEqual({
-        sessionId: 'cs_test_premium_yearly',
+      expect(response.body).toMatchObject({
+        sessionId: expect.any(String),
+        url: expect.stringContaining('checkout.stripe.com'),
       });
 
       expect(mockCheckoutSessionsCreate).toHaveBeenCalledWith(

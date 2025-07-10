@@ -64,8 +64,8 @@ afterEach(async () => {
 });
 
 describe('Subscription Routes', () => {
-  describe('POST /api/v1/subscribe/checkout', () => {
-    const checkoutEndpoint = '/api/v1/subscribe/checkout';
+  describe('POST /api/v1/payments/create-checkout-session', () => {
+    const checkoutEndpoint = '/api/v1/payments/create-checkout-session';
 
     it('認証されたユーザーはチェックアウトセッションを作成できる', async () => {
       const user = await createUser({
@@ -140,8 +140,8 @@ describe('Subscription Routes', () => {
     });
   });
 
-  describe('POST /api/v1/subscribe/portal', () => {
-    const portalEndpoint = '/api/v1/subscribe/portal';
+  describe('POST /api/v1/payments/portal', () => {
+    const portalEndpoint = '/api/v1/payments/portal';
 
     it('サブスクリプションがあるユーザーはポータルにアクセスできる', async () => {
       const user = await createSubscribedUser();
@@ -177,8 +177,8 @@ describe('Subscription Routes', () => {
     });
   });
 
-  describe('POST /api/v1/subscribe/cancel', () => {
-    const cancelEndpoint = '/api/v1/subscribe/cancel';
+  describe('POST /api/v1/payments/cancel-subscription', () => {
+    const cancelEndpoint = '/api/v1/payments/cancel-subscription';
 
     it('サブスクリプションをキャンセルできる', async () => {
       const user = await createSubscribedUser();
@@ -231,8 +231,8 @@ describe('Subscription Routes', () => {
     });
   });
 
-  describe('GET /api/v1/users/subscription', () => {
-    const subscriptionEndpoint = '/api/v1/users/subscription';
+  describe('GET /api/v1/payments/subscription-status', () => {
+    const subscriptionEndpoint = '/api/v1/payments/subscription-status';
 
     it('サブスクリプション情報を取得できる', async () => {
       const user = await createSubscribedUser();

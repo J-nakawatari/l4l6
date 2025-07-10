@@ -10,7 +10,7 @@ export const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => false, // プロキシ環境での一時的な回避策
+  skip: () => process.env.NODE_ENV === 'test', // テスト環境ではスキップ
 });
 
 // 認証用の厳しいレート制限
@@ -19,7 +19,7 @@ export const authLimiter = rateLimit({
   max: 5, // 最大5リクエスト
   message: 'Too many authentication attempts, please try again later.',
   skipSuccessfulRequests: true,
-  skip: () => false, // プロキシ環境での一時的な回避策
+  skip: () => process.env.NODE_ENV === 'test', // テスト環境ではスキップ
 });
 
 // CORS設定

@@ -17,7 +17,7 @@ export interface IUser extends Document<Types.ObjectId> {
   bio?: string;
   role: 'user' | 'admin';
   emailVerified: boolean;
-  subscription?: ISubscription;
+  subscription?: ISubscription & { plan?: 'free' | 'basic' | 'premium'; planId?: string };
   emailNotifications?: {
     newPrediction: boolean;
     hitNotification: boolean;
