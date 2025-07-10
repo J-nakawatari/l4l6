@@ -21,7 +21,9 @@ interface Plan {
 interface CurrentSubscription {
   plan: string;
   status: string;
-  expiresAt: string;
+  expiresAt?: string;
+  currentPeriodEnd?: string;
+  stripeSubscriptionId?: string;
 }
 
 const plans: Plan[] = [
@@ -59,12 +61,43 @@ export default function SubscriptionPage() {
 
       if (response.ok) {
         const data = await response.json();
-        if (data.subscription && data.subscription.status === 'active') {
-          setCurrentSubscription(data.subscription);
+        if (data.user && data.user.subscription && data.user.subscription.status === 'active') {
+          setCurrentSubscription(data.user.subscription);
         }
       }
     } catch (error) {
       console.error('Error fetching subscription:', error);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('本当にサブスクリプションを解除しますか？')) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/payments/cancel-subscription`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('サブスクリプションの解除に失敗しました');
+      }
+
+      alert('サブスクリプションを解除しました');
+      setCurrentSubscription(null);
+      await fetchCurrentSubscription();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'エラーが発生しました');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -94,18 +127,23 @@ export default function SubscriptionPage() {
         throw new Error('チェックアウトセッションの作成に失敗しました');
       }
 
-      const { sessionId } = await response.json();
+      const data = await response.json();
+      
+      // URLが返された場合は直接リダイレクト
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (data.sessionId) {
+        // sessionIdが返された場合はStripeのチェックアウトページにリダイレクト
+        const stripe = await stripePromise;
+        if (!stripe) {
+          throw new Error('Stripeの初期化に失敗しました');
+        }
 
-      // Stripeのチェックアウトページにリダイレクト
-      const stripe = await stripePromise;
-      if (!stripe) {
-        throw new Error('Stripeの初期化に失敗しました');
-      }
+        const { error } = await stripe.redirectToCheckout({ sessionId: data.sessionId });
 
-      const { error } = await stripe.redirectToCheckout({ sessionId });
-
-      if (error) {
-        setError(error.message || '決済処理中にエラーが発生しました');
+        if (error) {
+          setError(error.message || '決済処理中にエラーが発生しました');
+        }
       }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'エラーが発生しました');
@@ -125,7 +163,7 @@ export default function SubscriptionPage() {
               現在のプラン: {currentSubscription.plan === 'premium' ? 'プレミアムプラン' : 'ベーシックプラン'}
             </p>
             <p className="text-sm text-blue-600">
-              有効期限: {new Date(currentSubscription.expiresAt).toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' })}
+              有効期限: {new Date(currentSubscription.currentPeriodEnd || currentSubscription.expiresAt || '').toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' })}
             </p>
           </div>
         )}
@@ -183,23 +221,33 @@ export default function SubscriptionPage() {
                 ))}
               </ul>
 
-              <button
-                onClick={() => handleSelectPlan(plan.id)}
-                disabled={isLoading && selectedPlan === plan.id}
-                className={`w-full py-3 px-4 rounded-lg font-semibold transition ${
-                  plan.recommended
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-800 text-white hover:bg-gray-900'
-                } ${
-                  isLoading && selectedPlan === plan.id
-                    ? 'opacity-50 cursor-not-allowed'
-                    : ''
-                }`}
-              >
-                {isLoading && selectedPlan === plan.id
-                  ? '処理中...'
-                  : 'このプランを選択'}
-              </button>
+              {currentSubscription ? (
+                <button
+                  onClick={handleCancelSubscription}
+                  disabled={isLoading}
+                  className="w-full py-3 px-4 rounded-lg font-semibold transition bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? '処理中...' : 'サブスクを解除'}
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleSelectPlan(plan.id)}
+                  disabled={isLoading && selectedPlan === plan.id}
+                  className={`w-full py-3 px-4 rounded-lg font-semibold transition ${
+                    plan.recommended
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-800 text-white hover:bg-gray-900'
+                  } ${
+                    isLoading && selectedPlan === plan.id
+                      ? 'opacity-50 cursor-not-allowed'
+                      : ''
+                  }`}
+                >
+                  {isLoading && selectedPlan === plan.id
+                    ? '処理中...'
+                    : 'このプランを選択'}
+                </button>
+              )}
             </div>
           ))}
         </div>

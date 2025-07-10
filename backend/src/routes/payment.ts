@@ -336,4 +336,35 @@ router.post('/webhook', async (req, res): Promise<void> => {
   res.json({ received: true });
 });
 
+// サブスクリプション解除
+router.post('/cancel-subscription', authMiddleware, async (req: any, res): Promise<void> => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    
+    if (!user || !user.subscription || user.subscription.status !== 'active') {
+      res.status(400).json({ error: '有効なサブスクリプションがありません' });
+      return;
+    }
+
+    // Stripeでサブスクリプションをキャンセル
+    if (user.subscription.stripeSubscriptionId) {
+      try {
+        await getStripe().subscriptions.cancel(user.subscription.stripeSubscriptionId);
+      } catch (stripeError) {
+        console.error('Failed to cancel Stripe subscription:', stripeError);
+      }
+    }
+
+    // ユーザーのサブスクリプション情報を更新
+    user.subscription.status = 'cancelled';
+    await user.save();
+
+    res.json({ message: 'サブスクリプションを解除しました' });
+  } catch (error) {
+    console.error('Failed to cancel subscription:', error);
+    res.status(500).json({ error: 'サブスクリプションの解除に失敗しました' });
+  }
+});
+
 export default router;
