@@ -39,9 +39,18 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
     return;
   }
 
-  // テスト環境では実際のメール送信をスキップ
+  // テスト環境では常にメール送信をスキップ（環境変数に関係なく）
   if (process.env.NODE_ENV === 'test') {
     log.info('Email skipped in test environment', {
+      to: options.to,
+      subject: options.subject
+    });
+    return;
+  }
+  
+  // CI環境でも送信をスキップ
+  if (process.env.CI === 'true') {
+    log.info('Email skipped in CI environment', {
       to: options.to,
       subject: options.subject
     });
