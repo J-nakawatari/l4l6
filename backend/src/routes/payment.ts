@@ -69,8 +69,21 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
     const userId = req.user._id;
     const userEmail = req.user.email;
 
+    // 既存のサブスクリプションをチェック
+    const user = await User.findById(userId);
+    if (user?.subscription?.status === 'active') {
+      res.status(400).json({ error: { code: 'ALREADY_SUBSCRIBED', message: 'Already have an active subscription' } });
+      return;
+    }
+
+    // メール確認をチェック
+    if (!user?.emailVerified) {
+      res.status(403).json({ error: { code: 'EMAIL_NOT_VERIFIED', message: 'Please verify your email first' } });
+      return;
+    }
+
     // 開発環境では即座にサブスクリプションを有効化（一時的な対応）
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' && process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_dummy')) {
       const expiresAt = new Date();
       expiresAt.setMonth(expiresAt.getMonth() + 1);
 
@@ -84,6 +97,7 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
       });
 
       res.json({ 
+        sessionId: 'cs_test_123',
         url: `${process.env.FRONTEND_URL}/dashboard?success=true`,
         devMode: true 
       });
@@ -94,6 +108,11 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
     
     // priceIdが提供された場合は既存の価格IDを使用
     if (priceId) {
+      // 有効な価格IDのパターンをチェック（price_で始まる）
+      if (!priceId.startsWith('price_')) {
+        res.status(400).json({ error: { code: 'INVALID_PRICE_ID', message: 'Invalid price ID format' } });
+        return;
+      }
       lineItems = [
         {
           price: priceId,
@@ -199,13 +218,118 @@ router.get('/subscription-status', authMiddleware, async (req: any, res): Promis
     const userId = req.user._id;
     const user = await User.findById(userId).select('subscription');
     
+    if (!user?.subscription || user.subscription.status === 'inactive') {
+      res.json({
+        subscription: {
+          status: 'inactive',
+          isActive: false
+        }
+      });
+      return;
+    }
+
+    const currentPeriodEnd = user.subscription.currentPeriodEnd;
+    const isActive = currentPeriodEnd ? new Date(currentPeriodEnd) > new Date() : false;
+    const daysRemaining = currentPeriodEnd
+      ? Math.max(0, Math.ceil((new Date(currentPeriodEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+      : 0;
+
     res.json({
-      subscription: user?.subscription,
-      hasActiveSubscription: user?.hasActiveSubscription()
+      subscription: {
+        status: user.subscription.status,
+        stripeCustomerId: user.subscription.stripeCustomerId,
+        stripeSubscriptionId: user.subscription.stripeSubscriptionId,
+        currentPeriodEnd: currentPeriodEnd,
+        isActive: isActive,
+        daysRemaining
+      }
     });
   } catch (error) {
     log.error('Failed to get subscription status', { error });
     res.status(500).json({ error: 'Failed to get subscription status' });
+  }
+});
+
+// Billing Portal
+router.post('/portal', authMiddleware, async (req: any, res): Promise<void> => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    
+    if (!user?.subscription || user.subscription.status === 'inactive') {
+      res.status(400).json({ error: { code: 'NO_SUBSCRIPTION', message: 'No active subscription' } });
+      return;
+    }
+
+    if (!user.subscription.stripeCustomerId) {
+      res.status(400).json({ error: { code: 'NO_CUSTOMER_ID', message: 'No Stripe customer ID' } });
+      return;
+    }
+
+    // 開発環境ではダミーURLを返す
+    if (process.env.NODE_ENV === 'development' && process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_dummy')) {
+      res.json({ url: 'https://billing.stripe.com/session/bps_test_123' });
+      return;
+    }
+
+    const session = await getStripe().billingPortal.sessions.create({
+      customer: user.subscription.stripeCustomerId,
+      return_url: req.body.returnUrl || `${process.env.FRONTEND_URL}/dashboard`,
+    });
+
+    res.json({ url: session.url });
+  } catch (error) {
+    log.error('Failed to create billing portal session', { error });
+    res.status(500).json({ error: 'Failed to create billing portal session' });
+  }
+});
+
+// キャンセル
+router.post('/cancel-subscription', authMiddleware, async (req: any, res): Promise<void> => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    
+    if (!user?.subscription || user.subscription.status === 'inactive') {
+      res.status(400).json({ error: { code: 'NO_SUBSCRIPTION', message: 'No active subscription' } });
+      return;
+    }
+
+    if (user.subscription.status === 'cancelled') {
+      res.status(400).json({ error: { code: 'ALREADY_CANCELLED', message: 'Subscription already cancelled' } });
+      return;
+    }
+
+    // 開発環境では即座にキャンセル
+    if (process.env.NODE_ENV === 'development' && process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_dummy')) {
+      user.subscription.status = 'cancelled';
+      await user.save();
+      
+      res.json({ 
+        message: 'Subscription cancelled successfully',
+        cancelAt: user.subscription.currentPeriodEnd
+      });
+      return;
+    }
+
+    // 本番環境ではStripeでキャンセル
+    if (user.subscription.stripeSubscriptionId) {
+      const subscription = await getStripe().subscriptions.update(
+        user.subscription.stripeSubscriptionId,
+        { cancel_at_period_end: true }
+      );
+      
+      user.subscription.status = 'cancelled';
+      await user.save();
+      
+      res.json({ 
+        message: 'Subscription cancelled successfully',
+        cancelAt: new Date((subscription as any).current_period_end * 1000)
+      });
+    }
+  } catch (error) {
+    log.error('Failed to cancel subscription', { error });
+    res.status(500).json({ error: 'Failed to cancel subscription' });
   }
 });
 

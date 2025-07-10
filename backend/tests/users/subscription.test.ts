@@ -84,6 +84,7 @@ describe('POST /api/v1/payments/create-checkout-session', () => {
 
     it('既存のStripe顧客IDが使用される', async () => {
       const user = await createUser({
+        emailVerified: true,
         subscription: {
           status: 'inactive',
           stripeCustomerId: 'cus_existing_123',
