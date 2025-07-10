@@ -160,12 +160,12 @@ describe('GET /api/v1/admin/users/:id', () => {
       });
 
       const response = await request(app)
-        .get(getUserEndpoint(targetUser._id))
+        .get(getUserEndpoint((targetUser as any)._id))
         .set('Cookie', `token=${adminToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body.user).toMatchObject({
-        id: targetUser._id.toString(),
+        id: (targetUser as any)._id.toString(),
         name: 'ターゲットユーザー',
         email: 'target@example.com',
         role: 'user',
@@ -179,7 +179,7 @@ describe('GET /api/v1/admin/users/:id', () => {
       const targetUser = await createUser();
 
       const response = await request(app)
-        .get(getUserEndpoint(targetUser._id))
+        .get(getUserEndpoint((targetUser as any)._id))
         .set('Cookie', `token=${adminToken}`);
 
       expect(response.status).toBe(200);
@@ -196,7 +196,7 @@ describe('GET /api/v1/admin/users/:id', () => {
       const targetUser = await createUser();
 
       const response = await request(app)
-        .get(getUserEndpoint(targetUser._id))
+        .get(getUserEndpoint((targetUser as any)._id))
         .set('Cookie', `token=${adminToken}`);
 
       expect(response.status).toBe(200);
@@ -252,7 +252,7 @@ describe('PUT /api/v1/admin/users/:id', () => {
       };
 
       const response = await request(app)
-        .put(updateUserEndpoint(targetUser._id))
+        .put(updateUserEndpoint((targetUser as any)._id))
         .set('Cookie', `token=${adminToken}`)
         .send(updateData);
 
@@ -269,7 +269,7 @@ describe('PUT /api/v1/admin/users/:id', () => {
       const targetUser = await createUser();
 
       const response = await request(app)
-        .put(updateUserEndpoint(targetUser._id))
+        .put(updateUserEndpoint((targetUser as any)._id))
         .set('Cookie', `token=${adminToken}`)
         .send({
           subscription: {
@@ -289,7 +289,7 @@ describe('PUT /api/v1/admin/users/:id', () => {
       const targetUser = await createUser();
 
       const response = await request(app)
-        .put(updateUserEndpoint(targetUser._id))
+        .put(updateUserEndpoint((targetUser as any)._id))
         .set('Cookie', `token=${adminToken}`)
         .send({
           isSuspended: true,
@@ -310,7 +310,7 @@ describe('PUT /api/v1/admin/users/:id', () => {
       const targetUser = await createUser({ email: 'original@example.com' });
 
       const response = await request(app)
-        .put(updateUserEndpoint(targetUser._id))
+        .put(updateUserEndpoint((targetUser as any)._id))
         .set('Cookie', `token=${adminToken}`)
         .send({ email: 'new@example.com' });
 
@@ -328,7 +328,7 @@ describe('PUT /api/v1/admin/users/:id', () => {
       const targetUser = await createUser();
 
       const response = await request(app)
-        .put(updateUserEndpoint(targetUser._id))
+        .put(updateUserEndpoint((targetUser as any)._id))
         .set('Cookie', `token=${adminToken}`)
         .send({ password: 'NewPassword123!' });
 
@@ -352,7 +352,7 @@ describe('DELETE /api/v1/admin/users/:id', () => {
       const targetUser = await createUser();
 
       const response = await request(app)
-        .delete(deleteUserEndpoint(targetUser._id))
+        .delete(deleteUserEndpoint((targetUser as any)._id))
         .set('Cookie', `token=${adminToken}`)
         .send({ reason: 'Test deletion' });
 
@@ -371,7 +371,7 @@ describe('DELETE /api/v1/admin/users/:id', () => {
       const targetUser = await createSubscribedUser();
 
       const response = await request(app)
-        .delete(deleteUserEndpoint(targetUser._id))
+        .delete(deleteUserEndpoint((targetUser as any)._id))
         .set('Cookie', `token=${adminToken}`)
         .send({ reason: 'Account violation' });
 
@@ -401,7 +401,7 @@ describe('DELETE /api/v1/admin/users/:id', () => {
       const targetUser = await createUser();
 
       const response = await request(app)
-        .delete(deleteUserEndpoint(targetUser._id))
+        .delete(deleteUserEndpoint((targetUser as any)._id))
         .set('Cookie', `token=${adminToken}`)
         .send({});
 

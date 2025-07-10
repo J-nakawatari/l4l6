@@ -3,9 +3,17 @@ import { User } from '../models/User';
 import Stripe from 'stripe';
 import { log } from '../utils/logger';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-06-30.basil',
-});
+// Stripeインスタンスを遅延初期化
+let stripe: Stripe | null = null;
+
+function getStripe(): Stripe {
+  if (!stripe && process.env.STRIPE_SECRET_KEY) {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-06-30.basil',
+    });
+  }
+  return stripe!;
+}
 
 export const getProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -51,9 +59,9 @@ export const deleteAccount = async (req: Request, res: Response, next: NextFunct
     }
 
     // Stripeのサブスクリプションをキャンセル
-    if (user.subscription?.stripeSubscriptionId) {
+    if (user.subscription?.stripeSubscriptionId && process.env.STRIPE_SECRET_KEY) {
       try {
-        await stripe.subscriptions.cancel(user.subscription.stripeSubscriptionId);
+        await getStripe().subscriptions.cancel(user.subscription.stripeSubscriptionId);
       } catch (error) {
         log.error('Failed to cancel Stripe subscription', { error });
       }
