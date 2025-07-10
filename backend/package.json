@@ -17,7 +17,8 @@
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
     "openapi:validate": "npx @redocly/cli lint docs/openapi.yaml",
-    "openapi:bundle": "npx @redocly/cli bundle docs/openapi.yaml --output docs/openapi.bundled.json"
+    "openapi:bundle": "npx @redocly/cli bundle docs/openapi.yaml --output docs/openapi.bundled.json",
+    "create-admin": "ts-node src/scripts/createAdmin.ts"
   },
   "keywords": [],
   "author": "",
