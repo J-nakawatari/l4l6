@@ -453,6 +453,30 @@ router.post('/webhook', async (req, res): Promise<void> => {
       break;
     }
 
+    case 'invoice.payment_failed': {
+      const invoice = event.data.object as Stripe.Invoice;
+      
+      // 支払い失敗を処理
+      try {
+        const user = await User.findOne({
+          'subscription.stripeCustomerId': invoice.customer as string,
+        });
+        
+        if (user && user.subscription) {
+          user.subscription.status = 'past_due' as any;
+          await user.save();
+          
+          log.info(`Payment failed for user ${user._id}`, {
+            customerId: invoice.customer,
+            subscriptionId: (invoice as any).subscription,
+          });
+        }
+      } catch (error) {
+        log.error('Failed to handle payment failure', { error });
+      }
+      break;
+    }
+
     default:
       log.info(`Unhandled event type ${event.type}`);
   }

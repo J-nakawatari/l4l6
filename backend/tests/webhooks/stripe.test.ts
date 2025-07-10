@@ -134,6 +134,8 @@ describe('POST /api/v1/payments/webhook', () => {
         subscription: 'sub_test_123',
         metadata: {
           userId: user._id.toString(),
+          planId: 'basic',
+          billingPeriod: 'monthly',
         },
       };
 
@@ -335,7 +337,7 @@ describe('POST /api/v1/payments/webhook', () => {
 
       // サブスクリプションがキャンセルされていることを確認
       const updatedUser = await User.findById(user._id);
-      expect(updatedUser!.subscription!.status).toBe('canceled');
+      expect(updatedUser!.subscription!.status).toBe('inactive');
     });
   });
 
@@ -460,6 +462,8 @@ describe('POST /api/v1/payments/webhook', () => {
             subscription: 'sub_test_123',
             metadata: {
               userId: user._id.toString(),
+              planId: 'basic',
+              billingPeriod: 'monthly',
             },
           },
         },

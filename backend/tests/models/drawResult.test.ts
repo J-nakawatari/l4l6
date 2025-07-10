@@ -212,18 +212,18 @@ describe('DrawResult Model', () => {
       const frequency = await DrawResult.calculateDigitFrequency(3);
       
       // 1の位: 4が3回
-      expect(frequency[0]['4']).toBe(3);
+      expect(frequency[0]?.['4']).toBe(3);
       
       // 10の位: 3,5,9が各1回
-      expect(frequency[1]['3']).toBe(1);
-      expect(frequency[1]['5']).toBe(1);
-      expect(frequency[1]['9']).toBe(1);
+      expect(frequency[1]?.['3']).toBe(1);
+      expect(frequency[1]?.['5']).toBe(1);
+      expect(frequency[1]?.['9']).toBe(1);
       
       // 100の位: 2が3回
-      expect(frequency[2]['2']).toBe(3);
+      expect(frequency[2]?.['2']).toBe(3);
       
       // 1000の位: 1が3回
-      expect(frequency[3]['1']).toBe(3);
+      expect(frequency[3]?.['1']).toBe(3);
     });
   });
 });
