@@ -38,14 +38,19 @@ async function createAdmin() {
       } else {
         // 既存ユーザーを管理者に昇格
         const confirm = await question('\nこのメールアドレスは既に通常ユーザーとして登録されています。管理者に昇格しますか？ (yes/no): ');
-        if (confirm.toLowerCase() === 'yes') {
+        if (confirm.toLowerCase() === 'yes' || confirm.toLowerCase() === 'y') {
           existingUser.role = 'admin';
           await existingUser.save();
           console.log('\n✅ ユーザーを管理者に昇格しました');
+          console.log(`   メールアドレス: ${existingUser.email}`);
+          console.log(`   名前: ${existingUser.name}`);
+          console.log('\n管理画面URL: http://localhost:3000/admin/login');
         } else {
           console.log('\n操作をキャンセルしました');
         }
       }
+      rl.close();
+      await mongoose.disconnect();
       process.exit(0);
     }
 
