@@ -174,7 +174,7 @@ router.post('/confirm-subscription', authMiddleware, async (req: any, res): Prom
       await User.findByIdAndUpdate(userId, {
         subscription: {
           status: 'active',
-          plan: session.metadata.planId || 'basic',
+          plan: session.metadata?.planId || 'basic',
           stripeCustomerId: session.customer as string,
           stripeSubscriptionId: session.subscription as string,
           currentPeriodEnd: expiresAt,
