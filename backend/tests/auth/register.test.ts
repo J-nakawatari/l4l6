@@ -155,7 +155,7 @@ describe('POST /api/v1/auth/register', () => {
       const tooManyRequests = responses.filter(r => r.status === 429);
       
       expect(tooManyRequests.length).toBeGreaterThan(0);
-      expect(tooManyRequests[0].body.error.code).toBe('RATE_LIMIT_EXCEEDED');
+      expect(tooManyRequests[0]?.body.error.code).toBe('RATE_LIMIT_EXCEEDED');
     });
   });
 

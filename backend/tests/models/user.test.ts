@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { User, IUser } from '../../src/models/User';
+import { User } from '../../src/models/User';
 import bcrypt from 'bcrypt';
 
 let mongoServer: MongoMemoryServer;
@@ -124,7 +124,9 @@ describe('User Model', () => {
       expect(user.hasActiveSubscription()).toBe(true);
 
       // 期限切れのサブスクリプション
-      user.subscription.currentPeriodEnd = new Date(Date.now() - 24 * 60 * 60 * 1000); // 1日前
+      if (user.subscription) {
+        user.subscription.currentPeriodEnd = new Date(Date.now() - 24 * 60 * 60 * 1000); // 1日前
+      }
       expect(user.hasActiveSubscription()).toBe(false);
     });
   });
@@ -156,7 +158,7 @@ describe('User Model', () => {
     it('ロールでユーザーを検索できる', async () => {
       const admins = await User.find({ role: 'admin' });
       expect(admins).toHaveLength(1);
-      expect(admins[0].email).toBe('admin@example.com');
+      expect(admins[0]?.email).toBe('admin@example.com');
     });
   });
 

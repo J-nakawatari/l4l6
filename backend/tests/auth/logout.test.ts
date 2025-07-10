@@ -71,7 +71,7 @@ describe('POST /api/v1/auth/logout', () => {
 
       const refreshToken = loginResponse.body.refreshToken;
       const cookies = loginResponse.headers['set-cookie'] as string[];
-      const token = cookies[0].split(';')[0].split('=')[1];
+      const token = cookies[0]?.split(';')[0]?.split('=')[1];
 
       // ログアウト
       await request(app)
@@ -131,7 +131,7 @@ describe('POST /api/v1/auth/logout', () => {
           password: 'SecurePass123!',
         });
       const device1Cookies = device1Login.headers['set-cookie'] as string[];
-      const device1Token = device1Cookies[0].split(';')[0].split('=')[1];
+      const device1Token = device1Cookies[0]?.split(';')[0]?.split('=')[1];
 
       // デバイス2でログイン
       const device2Login = await request(app)
@@ -140,7 +140,8 @@ describe('POST /api/v1/auth/logout', () => {
           email: testUser.email,
           password: 'SecurePass123!',
         });
-      const device2Token = device2Login.headers['set-cookie'][0].split(';')[0].split('=')[1];
+      const device2Cookies = device2Login.headers['set-cookie'] as string[];
+      const device2Token = device2Cookies[0]?.split(';')[0]?.split('=')[1];
 
       // デバイス1でログアウト
       await request(app)

@@ -118,7 +118,7 @@ describe('POST /api/v1/admin/auth/login', () => {
       const rateLimited = responses.filter(r => r.status === 429);
       
       expect(rateLimited.length).toBeGreaterThan(0);
-      expect(rateLimited[0].body.error.message).toContain('Too many login attempts');
+      expect(rateLimited[0]?.body.error.message).toContain('Too many login attempts');
     });
   });
 

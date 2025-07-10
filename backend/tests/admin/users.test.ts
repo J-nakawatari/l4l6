@@ -81,7 +81,7 @@ describe('GET /api/v1/admin/users', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.users).toHaveLength(1);
-      expect(response.body.users[0].name).toBe('田中太郎');
+      expect(response.body.users[0]?.name).toBe('田中太郎');
     });
 
     it('サブスクリプション状態でフィルタできる', async () => {
@@ -118,8 +118,8 @@ describe('GET /api/v1/admin/users', () => {
         .set('Cookie', `token=${adminToken}`);
 
       expect(response.status).toBe(200);
-      expect(response.body.users[0].name).toBe('Cユーザー');
-      expect(response.body.users[1].name).toBe('Bユーザー');
+      expect(response.body.users[0]?.name).toBe('Cユーザー');
+      expect(response.body.users[1]?.name).toBe('Bユーザー');
     });
   });
 

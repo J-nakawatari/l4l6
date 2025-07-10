@@ -1,5 +1,5 @@
 import { connectTestDB, closeTestDB, clearTestDB } from '../helpers/db';
-import { Prediction, IPrediction } from '../../src/models/Prediction';
+import { Prediction } from '../../src/models/Prediction';
 
 beforeAll(async () => {
   await connectTestDB();
@@ -127,8 +127,9 @@ describe('Prediction Model', () => {
     it('公開された予想のみ取得できる', async () => {
       const published = await Prediction.findPublished();
       expect(published).toHaveLength(2); // viewCount > 0 のもの
-      expect(published[0].drawNumber).toBe(1599); // 新しい順
-      expect(published[1].drawNumber).toBe(1598);
+      expect(published).toHaveLength(2);
+      expect(published[0]?.drawNumber).toBe(1599); // 新しい順
+      expect(published[1]?.drawNumber).toBe(1598);
     });
 
     it('日付範囲で予想を検索できる', async () => {
@@ -140,7 +141,7 @@ describe('Prediction Model', () => {
       });
       
       expect(predictions).toHaveLength(1);
-      expect(predictions[0].drawNumber).toBe(1599);
+      expect(predictions[0]?.drawNumber).toBe(1599);
     });
   });
 

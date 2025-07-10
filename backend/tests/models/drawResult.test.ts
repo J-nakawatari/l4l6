@@ -1,5 +1,5 @@
 import { connectTestDB, closeTestDB, clearTestDB } from '../helpers/db';
-import { DrawResult, IDrawResult } from '../../src/models/DrawResult';
+import { DrawResult } from '../../src/models/DrawResult';
 import { Prediction } from '../../src/models/Prediction';
 
 beforeAll(async () => {
@@ -125,16 +125,16 @@ describe('DrawResult Model', () => {
       );
       
       expect(results).toHaveLength(2);
-      expect(results[0].drawNumber).toBe(1600); // 新しい順
-      expect(results[1].drawNumber).toBe(1599);
+      expect(results[0]?.drawNumber).toBe(1600); // 新しい順
+      expect(results[1]?.drawNumber).toBe(1599);
     });
 
     it('過去N回の結果を取得できる', async () => {
       const results = await DrawResult.findRecent(2);
       
       expect(results).toHaveLength(2);
-      expect(results[0].drawNumber).toBe(1600);
-      expect(results[1].drawNumber).toBe(1599);
+      expect(results[0]?.drawNumber).toBe(1600);
+      expect(results[1]?.drawNumber).toBe(1599);
     });
   });
 

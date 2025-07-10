@@ -180,7 +180,7 @@ describe('POST /api/v1/auth/login', () => {
       expect(rateLimited.length).toBeGreaterThan(0);
       expect(rateLimited.length).toBeGreaterThan(0);
       if (rateLimited.length > 0) {
-        expect(rateLimited[0].body.error.code).toBe('RATE_LIMIT_EXCEEDED');
+        expect(rateLimited[0]?.body.error.code).toBe('RATE_LIMIT_EXCEEDED');
       }
     });
 
