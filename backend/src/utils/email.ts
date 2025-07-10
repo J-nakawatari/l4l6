@@ -15,17 +15,35 @@ interface EmailOptions {
 
 // メール送信の基本関数
 export async function sendEmail(options: EmailOptions): Promise<void> {
+  // テスト用メールアドレスへの送信をブロック
+  if (options.to.includes('@example.com')) {
+    log.warn('Blocked email to test address', {
+      to: options.to,
+      subject: options.subject,
+    });
+    return;
+  }
+
   log.info('Sending email', {
     to: options.to,
     subject: options.subject,
   });
 
-  // 開発環境ではコンソールに出力
-  if (process.env.NODE_ENV === 'development' && !process.env.SENDGRID_API_KEY) {
-    log.info('Email Preview (Development Mode)', {
+  // 開発環境またはテスト環境ではコンソールに出力
+  if ((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') && !process.env.SENDGRID_API_KEY) {
+    log.info('Email Preview (Development/Test Mode)', {
       to: options.to,
       subject: options.subject,
       content: options.text || 'HTML content'
+    });
+    return;
+  }
+
+  // テスト環境では実際のメール送信をスキップ
+  if (process.env.NODE_ENV === 'test') {
+    log.info('Email skipped in test environment', {
+      to: options.to,
+      subject: options.subject
     });
     return;
   }
@@ -43,9 +61,15 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
 
       await sgMail.send(msg);
       log.info('Email sent successfully', { to: options.to });
-    } catch (error) {
-      log.error('Failed to send email', error);
-      throw new Error('Failed to send email');
+    } catch (error: any) {
+      log.error('Failed to send email', { 
+        error: error.message,
+        code: error.code,
+        response: error.response?.body,
+        to: options.to,
+        from: msg.from
+      });
+      throw new Error('Failed to send email: ' + error.message);
     }
   } else {
     log.warn('Email not sent: SENDGRID_API_KEY not configured');
@@ -75,8 +99,14 @@ export async function sendVerificationEmail(
       await sgMail.send(msg);
       log.info('Verification email sent successfully', { to: email });
       return;
-    } catch (error) {
-      log.error('Failed to send verification email with template', error);
+    } catch (error: any) {
+      log.error('Failed to send verification email with template', { 
+        error: error.message,
+        code: error.code,
+        response: error.response?.body,
+        to: email,
+        templateId: process.env.SENDGRID_VERIFICATION_TEMPLATE_ID
+      });
       // テンプレート送信に失敗した場合は通常のメールで送信
     }
   }
