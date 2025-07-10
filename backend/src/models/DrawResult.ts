@@ -148,8 +148,8 @@ drawResultSchema.statics.calculateDigitFrequency = async function(limit: number)
   results.forEach((result: any) => {
     const digits = result.winningNumber.split('').reverse(); // 右から左へ（1の位から）
     digits.forEach((digit: string, position: number) => {
-      if (frequency[position] && frequency[position]![digit]) {
-        frequency[position]![digit]++;
+      if (frequency[position]) {
+        frequency[position]![digit] = (frequency[position]![digit] || 0) + 1;
       }
     });
   });

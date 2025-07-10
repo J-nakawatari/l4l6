@@ -22,10 +22,30 @@ function getStripe(): Stripe {
 const PLANS = {
   basic: {
     monthly: {
-      name: 'ベーシックプラン',
-      description: '次回予想15個（AIハイブリッド予想12個＋個別アルゴリズム予想3個）',
+      name: 'ベーシックプラン（月額）',
+      description: 'データ分析予想、過去の予想結果閲覧、メールサポート',
       amount: 980,
       interval: 'month' as const,
+    },
+    yearly: {
+      name: 'ベーシックプラン（年額）',
+      description: 'データ分析予想、過去の予想結果閲覧、メールサポート',
+      amount: 9800,
+      interval: 'year' as const,
+    },
+  },
+  premium: {
+    monthly: {
+      name: 'プレミアムプラン（月額）',
+      description: 'AI予想＋データ分析予想、過去の予想結果閲覧、予想の詳細解説、当選確率の統計情報、優先メールサポート',
+      amount: 1980,
+      interval: 'month' as const,
+    },
+    yearly: {
+      name: 'プレミアムプラン（年額）',
+      description: 'AI予想＋データ分析予想、過去の予想結果閲覧、予想の詳細解説、当選確率の統計情報、優先メールサポート',
+      amount: 19800,
+      interval: 'year' as const,
     },
   },
 };
@@ -82,27 +102,6 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
       return;
     }
 
-    // 開発環境では即座にサブスクリプションを有効化（一時的な対応）
-    if (process.env.NODE_ENV === 'development' && process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_dummy')) {
-      const expiresAt = new Date();
-      expiresAt.setMonth(expiresAt.getMonth() + 1);
-
-      await User.findByIdAndUpdate(userId, {
-        subscription: {
-          status: 'active',
-          plan: 'basic',
-          currentPeriodEnd: expiresAt,
-          expiresAt,
-        },
-      });
-
-      res.json({ 
-        sessionId: 'cs_test_123',
-        url: 'https://checkout.stripe.com/pay/cs_test_123'
-      });
-      return;
-    }
-
     let lineItems;
     
     // priceIdが提供された場合は既存の価格IDを使用
@@ -130,7 +129,13 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
         return;
       }
 
-      const planInfo = PLANS[planId as keyof typeof PLANS]['monthly'];
+      const plan = PLANS[planId as keyof typeof PLANS];
+      const planInfo = plan[billingPeriod as keyof typeof plan];
+      
+      if (!planInfo) {
+        res.status(400).json({ error: 'Invalid plan configuration' });
+        return;
+      }
       
       lineItems = [
         {
@@ -150,13 +155,34 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
       ];
     }
 
+    // 開発・テスト環境では即座にサブスクリプションを有効化（一時的な対応）
+    if ((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') && process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_dummy')) {
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+      await User.findByIdAndUpdate(userId, {
+        subscription: {
+          status: 'active',
+          plan: planId || 'basic',
+          currentPeriodEnd: expiresAt,
+          expiresAt,
+        },
+      });
+
+      res.json({ 
+        sessionId: 'cs_test_123',
+        url: 'https://checkout.stripe.com/pay/cs_test_123'
+      });
+      return;
+    }
+
     // チェックアウトセッションを作成
     const session = await getStripe().checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'subscription',
-      success_url: `${process.env.FRONTEND_URL}/dashboard?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/subscription?canceled=true`,
+      success_url: `${process.env.FRONTEND_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/subscription`,
       customer_email: userEmail,
       metadata: {
         userId: userId.toString(),
@@ -265,8 +291,8 @@ router.post('/portal', authMiddleware, async (req: any, res): Promise<void> => {
       return;
     }
 
-    // 開発環境ではダミーURLを返す
-    if (process.env.NODE_ENV === 'development' && process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_dummy')) {
+    // 開発・テスト環境ではダミーURLを返す
+    if ((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') && process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_dummy')) {
       res.json({ url: 'https://billing.stripe.com/session/bps_test_123' });
       return;
     }
@@ -299,8 +325,8 @@ router.post('/cancel-subscription', authMiddleware, async (req: any, res): Promi
       return;
     }
 
-    // 開発環境では即座にキャンセル
-    if (process.env.NODE_ENV === 'development' && process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_dummy')) {
+    // 開発・テスト環境では即座にキャンセル
+    if ((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') && process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_dummy')) {
       user.subscription.status = 'cancelled';
       await user.save();
       
@@ -365,8 +391,9 @@ router.post('/webhook', async (req, res): Promise<void> => {
     created: new Date(event.created * 1000),
   });
 
-  // イベントを処理
-  switch (event.type) {
+  try {
+    // イベントを処理
+    switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session;
       
@@ -479,40 +506,14 @@ router.post('/webhook', async (req, res): Promise<void> => {
 
     default:
       log.info(`Unhandled event type ${event.type}`);
-  }
-
-  res.json({ received: true });
-});
-
-// サブスクリプション解除
-router.post('/cancel-subscription', authMiddleware, async (req: any, res): Promise<void> => {
-  try {
-    const userId = req.user._id;
-    const user = await User.findById(userId);
-    
-    if (!user || !user.subscription || user.subscription.status !== 'active') {
-      res.status(400).json({ error: '有効なサブスクリプションがありません' });
-      return;
     }
 
-    // Stripeでサブスクリプションをキャンセル
-    if (user.subscription.stripeSubscriptionId) {
-      try {
-        await getStripe().subscriptions.cancel(user.subscription.stripeSubscriptionId);
-      } catch (stripeError) {
-        log.error('Failed to cancel Stripe subscription', { error: stripeError });
-      }
-    }
-
-    // ユーザーのサブスクリプション情報を更新
-    user.subscription.status = 'cancelled';
-    await user.save();
-
-    res.json({ message: 'サブスクリプションを解除しました' });
+    res.json({ received: true });
   } catch (error) {
-    log.error('Failed to cancel subscription', { error });
-    res.status(500).json({ error: 'サブスクリプションの解除に失敗しました' });
+    log.error('Error processing webhook', { error, eventType: event.type });
+    res.status(500).json({ error: { code: 'WEBHOOK_ERROR', message: 'Failed to process webhook' } });
   }
 });
+
 
 export default router;

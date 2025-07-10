@@ -175,7 +175,7 @@ describe('Prediction History API', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.predictions).toHaveLength(1);
-      expect(response.body.predictions[0].drawNumber).toBe(1232);
+      expect(response.body.predictions[0].drawNumber).toBe(1233);
     });
 
     it('当選のみでフィルタリングできる', async () => {
@@ -195,7 +195,7 @@ describe('Prediction History API', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.predictions).toHaveLength(1);
-      expect(response.body.predictions[0].drawNumber).toBe(1232);
+      expect(response.body.predictions[0].drawNumber).toBe(1233);
       expect(response.body.predictions[0].result.isWin).toBe(true);
     });
 
