@@ -4,6 +4,7 @@ interface UserFactoryOptions {
   email?: string;
   password?: string;
   name?: string;
+  bio?: string;
   role?: 'user' | 'admin';
   emailVerified?: boolean;
   subscription?: {
