@@ -22,11 +22,11 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
 
   // 開発環境ではコンソールに出力
   if (process.env.NODE_ENV === 'development' && !process.env.SENDGRID_API_KEY) {
-    console.log('\n=== Email Preview ===');
-    console.log(`To: ${options.to}`);
-    console.log(`Subject: ${options.subject}`);
-    console.log(`Content: ${options.text || 'HTML content'}`);
-    console.log('====================\n');
+    log.info('Email Preview (Development Mode)', {
+      to: options.to,
+      subject: options.subject,
+      content: options.text || 'HTML content'
+    });
     return;
   }
 

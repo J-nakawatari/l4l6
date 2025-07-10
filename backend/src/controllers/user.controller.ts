@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { User } from '../models/User';
 import Stripe from 'stripe';
+import { log } from '../utils/logger';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-06-30.basil',
@@ -54,7 +55,7 @@ export const deleteAccount = async (req: Request, res: Response, next: NextFunct
       try {
         await stripe.subscriptions.cancel(user.subscription.stripeSubscriptionId);
       } catch (error) {
-        console.error('Failed to cancel Stripe subscription:', error);
+        log.error('Failed to cancel Stripe subscription', { error });
       }
     }
 

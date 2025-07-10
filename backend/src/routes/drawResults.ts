@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { authenticate } from '../middleware/auth';
 import { DrawResult } from '../models/DrawResult';
 import { User } from '../models/User';
+import { log } from '../utils/logger';
 import { 
   generateHybridPrediction,
   generateTransitionBasedPrediction,
@@ -171,7 +172,7 @@ router.get('/history-with-prediction', authenticate, async (req: Request, res: R
     res.json({ results });
     
   } catch (error) {
-    console.error('Error fetching draw history:', error);
+    log.error('Error fetching draw history', { error });
     res.status(500).json({ 
       error: 'Failed to fetch draw history',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -327,7 +328,7 @@ router.get('/history-with-all-predictions', authenticate, async (req: Request, r
     });
 
   } catch (error) {
-    console.error('Error fetching all prediction history:', error);
+    log.error('Error fetching all prediction history', { error });
     res.status(500).json({ 
       error: 'Failed to fetch all prediction history',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -450,7 +451,7 @@ router.get('/history-with-prediction-period', authenticate, async (req: Request,
     });
 
   } catch (error) {
-    console.error('Error fetching period prediction history:', error);
+    log.error('Error fetching period prediction history', { error });
     res.status(500).json({ 
       error: 'Failed to fetch period prediction history',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -549,7 +550,7 @@ router.get('/history-with-ai-random-period', authenticate, async (req: Request, 
     });
 
   } catch (error) {
-    console.error('Error fetching AI random prediction history:', error);
+    log.error('Error fetching AI random prediction history', { error });
     res.status(500).json({ 
       error: 'Failed to fetch AI random prediction history',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -573,7 +574,7 @@ router.get('/latest', authenticate, async (_req: Request, res: Response): Promis
     res.json({ result: latest });
     
   } catch (error) {
-    console.error('Error fetching latest draw:', error);
+    log.error('Error fetching latest draw', { error });
     res.status(500).json({ 
       error: 'Failed to fetch latest draw',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -654,7 +655,7 @@ router.get('/next-prediction', authenticate, async (req: Request, res: Response)
     });
     
   } catch (error) {
-    console.error('Error fetching next prediction:', error);
+    log.error('Error fetching next prediction', { error });
     res.status(500).json({ 
       error: 'Failed to fetch next prediction',
       message: error instanceof Error ? error.message : 'Unknown error'

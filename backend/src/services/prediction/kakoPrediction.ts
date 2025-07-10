@@ -1,4 +1,5 @@
 import { DrawResult } from '../../models/DrawResult';
+import { log } from '../../utils/logger';
 
 /**
  * 過去実績予想アルゴリズム
@@ -106,7 +107,7 @@ export async function generateKakoPredictions(): Promise<string[]> {
     return Array.from(predictions).slice(0, 10);
     
   } catch (error) {
-    console.error('Kako prediction generation error:', error);
+    log.error('Kako prediction generation error', { error });
     return [];
   }
 }

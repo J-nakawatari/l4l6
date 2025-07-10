@@ -2,6 +2,7 @@ import { Router } from 'express';
 import Stripe from 'stripe';
 import { authenticate as authMiddleware } from '../middleware/auth';
 import { User } from '../models/User';
+import { log } from '../utils/logger';
 
 const router = Router();
 
@@ -45,7 +46,7 @@ router.get('/price-info/:priceId', async (req, res): Promise<void> => {
       product: price.product
     });
   } catch (error) {
-    console.error('Failed to retrieve price:', error);
+    log.error('Failed to retrieve price', { error });
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({ 
       error: 'Failed to retrieve price information',
@@ -148,7 +149,7 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
 
     res.json({ url: session.url });
   } catch (error) {
-    console.error('Failed to create checkout session:', error);
+    log.error('Failed to create checkout session', { error });
     res.status(500).json({ error: 'Failed to create checkout session' });
   }
 });
@@ -187,7 +188,7 @@ router.post('/confirm-subscription', authMiddleware, async (req: any, res): Prom
       res.status(400).json({ error: 'Invalid session or payment not completed' });
     }
   } catch (error) {
-    console.error('Failed to confirm subscription:', error);
+    log.error('Failed to confirm subscription', { error });
     res.status(500).json({ error: 'Failed to confirm subscription' });
   }
 });
@@ -203,14 +204,14 @@ router.get('/subscription-status', authMiddleware, async (req: any, res): Promis
       hasActiveSubscription: user?.hasActiveSubscription()
     });
   } catch (error) {
-    console.error('Failed to get subscription status:', error);
+    log.error('Failed to get subscription status', { error });
     res.status(500).json({ error: 'Failed to get subscription status' });
   }
 });
 
 // Stripe Webhook
 router.post('/webhook', async (req, res): Promise<void> => {
-  console.log('Webhook received:', {
+  log.info('Webhook received', {
     headers: req.headers,
     bodyLength: req.body?.length,
   });
@@ -226,7 +227,7 @@ router.post('/webhook', async (req, res): Promise<void> => {
       process.env.STRIPE_WEBHOOK_SECRET || ''
     );
   } catch (err) {
-    console.error('Webhook signature verification failed:', {
+    log.error('Webhook signature verification failed', {
       error: err,
       signature: sig,
       webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ? 'Set' : 'Not set',
@@ -235,7 +236,7 @@ router.post('/webhook', async (req, res): Promise<void> => {
     return;
   }
 
-  console.log('Webhook event received:', {
+  log.info('Webhook event received', {
     type: event.type,
     id: event.id,
     created: new Date(event.created * 1000),
@@ -269,7 +270,7 @@ router.post('/webhook', async (req, res): Promise<void> => {
             },
           });
 
-          console.log(`Subscription activated for user ${userId}`, {
+          log.info(`Subscription activated for user ${userId}`, {
             planId,
             billingPeriod,
             expiresAt,
@@ -277,7 +278,7 @@ router.post('/webhook', async (req, res): Promise<void> => {
             subscriptionId: session.subscription,
           });
         } catch (error) {
-          console.error('Failed to update user subscription:', {
+          log.error('Failed to update user subscription', {
             error,
             userId,
             sessionId: session.id,
@@ -305,7 +306,7 @@ router.post('/webhook', async (req, res): Promise<void> => {
         );
 
       } catch (error) {
-        console.error('Failed to cancel user subscription:', error);
+        log.error('Failed to cancel user subscription', { error });
       }
       break;
     }
@@ -321,16 +322,16 @@ router.post('/webhook', async (req, res): Promise<void> => {
 
         if (user) {
           // プラン変更などの処理
-          console.log(`Subscription updated for user ${user._id}`);
+          log.info(`Subscription updated for user ${user._id}`);
         }
       } catch (error) {
-        console.error('Failed to update subscription:', error);
+        log.error('Failed to update subscription', { error });
       }
       break;
     }
 
     default:
-      console.log(`Unhandled event type ${event.type}`);
+      log.info(`Unhandled event type ${event.type}`);
   }
 
   res.json({ received: true });
@@ -352,7 +353,7 @@ router.post('/cancel-subscription', authMiddleware, async (req: any, res): Promi
       try {
         await getStripe().subscriptions.cancel(user.subscription.stripeSubscriptionId);
       } catch (stripeError) {
-        console.error('Failed to cancel Stripe subscription:', stripeError);
+        log.error('Failed to cancel Stripe subscription', { error: stripeError });
       }
     }
 
@@ -362,7 +363,7 @@ router.post('/cancel-subscription', authMiddleware, async (req: any, res): Promi
 
     res.json({ message: 'サブスクリプションを解除しました' });
   } catch (error) {
-    console.error('Failed to cancel subscription:', error);
+    log.error('Failed to cancel subscription', { error });
     res.status(500).json({ error: 'サブスクリプションの解除に失敗しました' });
   }
 });

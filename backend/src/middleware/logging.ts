@@ -1,5 +1,5 @@
 import morgan from 'morgan';
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { httpLogStream, log } from '../utils/logger';
 
 // カスタムトークン
@@ -24,14 +24,14 @@ export const httpLogging = morgan(logFormat, {
 });
 
 // リクエストIDを生成するミドルウェア
-export const requestId = (req: Request, res: Response, next: Function) => {
+export const requestId = (req: Request, res: Response, next: NextFunction) => {
   (req as any).id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   res.setHeader('X-Request-Id', (req as any).id);
   next();
 };
 
 // APIレスポンスログミドルウェア
-export const apiResponseLogger = (req: Request, res: Response, next: Function) => {
+export const apiResponseLogger = (req: Request, res: Response, next: NextFunction) => {
   const originalSend = res.send;
   const startTime = Date.now();
 

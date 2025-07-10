@@ -1,3 +1,5 @@
+import { log } from './logger';
+
 export class RouteRegistry {
   private static routes = new Set<string>();
 
@@ -18,8 +20,7 @@ export class RouteRegistry {
   }
 
   static printRoutes(): void {
-    console.log('\n=== Registered Routes ===');
-    this.getRoutes().forEach(route => console.log(route));
-    console.log('========================\n');
+    const routes = this.getRoutes();
+    log.info('Registered Routes', { routes, count: routes.length });
   }
 }

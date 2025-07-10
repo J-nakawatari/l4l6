@@ -69,8 +69,7 @@ router.post('/logout',
   authenticate,
   async (req, res, next) => {
     try {
-      const token = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '');
-      await authService.logout((req as any).user!.id, token);
+      await authService.logout((req as any).user!.id);
       
       // Cookieをクリア
       res.clearCookie('token');
@@ -121,7 +120,7 @@ router.post('/verify-email',
 router.post('/forgot-password',
   authLimiter,
   validate(forgotPasswordSchema),
-  async (req, res, _next) => {
+  async (req, res) => {
     try {
       await authService.forgotPassword(req.body.email);
       

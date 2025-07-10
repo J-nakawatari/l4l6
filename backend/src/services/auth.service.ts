@@ -122,7 +122,7 @@ export class AuthService {
     };
   }
 
-  async logout(userId: string, _token: string): Promise<void> {
+  async logout(userId: string): Promise<void> {
     // トークンをブラックリストに追加（実装省略）
     // await redis.set(`blacklist:${token}`, '1', 'EX', 7200); // 2時間
 
@@ -181,10 +181,13 @@ export class AuthService {
     }
   }
 
-  async resetPassword(_token: string, newPassword: string): Promise<void> {
+  async resetPassword(token: string, newPassword: string): Promise<void> {
     // トークンからユーザーIDを取得（実装省略）
-    // const userId = await redis.get(`password-reset:${token}`);
+    // TODO: const userId = await redis.get(`password-reset:${token}`);
     const userId = 'dummy'; // 仮実装
+    if (token) {
+      // tokenパラメータを使用して将来のRedis実装に備える
+    }
 
     if (!userId) {
       throw new AppError('Invalid or expired reset token', 400, 'INVALID_TOKEN');
@@ -245,7 +248,7 @@ export class AuthService {
         accessToken,
         user: userResponse,
       };
-    } catch (error) {
+    } catch {
       throw new AppError('Invalid refresh token', 401, 'INVALID_REFRESH_TOKEN');
     }
   }

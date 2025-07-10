@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { authenticate } from '../middleware/auth';
 import { DrawResult } from '../models/DrawResult';
+import { log } from '../utils/logger';
 import {
   generateTransitionBasedPrediction,
   generateCorrelationBasedPrediction,
@@ -241,7 +242,7 @@ router.post('/run', authenticate, async (req: Request, res: Response): Promise<v
     res.json({ results });
     
   } catch (error) {
-    console.error('Error running backtest:', error);
+    log.error('Error running backtest', { error });
     res.status(500).json({ 
       error: 'Failed to run backtest',
       message: error instanceof Error ? error.message : 'Unknown error'
