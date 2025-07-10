@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 
-export interface IPrediction extends Document {
+export interface IPrediction extends Document<Types.ObjectId> {
   drawNumber: number;
   drawDate: Date;
   dataLogicPredictions: string[];

@@ -5,7 +5,6 @@ import { createUser, createAdmin, createSubscribedUser } from '../factories/user
 import { getAuthToken } from '../helpers/auth';
 import { Prediction } from '../../src/models/Prediction';
 import { DrawResult } from '../../src/models/DrawResult';
-import { PredictionResult } from '../../src/models/PredictionResult';
 
 beforeAll(async () => {
   await connectTestDB();
@@ -78,7 +77,7 @@ describe('GET /api/v1/admin/analytics', () => {
       const adminToken = getAuthToken(admin);
 
       // 予想データを作成
-      const prediction = await Prediction.create({
+      await Prediction.create({
         drawNumber: 1600,
         drawDate: new Date(),
         dataLogicPredictions: ['1234', '5678'],
@@ -86,7 +85,7 @@ describe('GET /api/v1/admin/analytics', () => {
         viewCount: 100,
       });
 
-      const drawResult = await DrawResult.create({
+      await DrawResult.create({
         drawNumber: 1600,
         drawDate: new Date(),
         winningNumber: '1234',
@@ -259,7 +258,7 @@ describe('GET /api/v1/admin/analytics/predictions', () => {
 
       // テストデータ作成
       for (let i = 1; i <= 10; i++) {
-        const prediction = await Prediction.create({
+        await Prediction.create({
           drawNumber: 1600 + i,
           drawDate: new Date(2024, 0, i),
           dataLogicPredictions: ['1234', '5678'],
@@ -267,7 +266,7 @@ describe('GET /api/v1/admin/analytics/predictions', () => {
           viewCount: Math.floor(Math.random() * 1000),
         });
 
-        const drawResult = await DrawResult.create({
+        await DrawResult.create({
           drawNumber: 1600 + i,
           drawDate: new Date(2024, 0, i),
           winningNumber: i % 2 === 0 ? '1234' : '9999', // 50%的中率

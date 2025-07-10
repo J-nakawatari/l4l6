@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 
-export interface IPredictionResult extends Document {
+export interface IPredictionResult extends Document<Types.ObjectId> {
   userId: mongoose.Types.ObjectId;
   predictionId: mongoose.Types.ObjectId;
   drawResultId: mongoose.Types.ObjectId;

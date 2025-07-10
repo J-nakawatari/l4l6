@@ -1,7 +1,7 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 import { IPrediction } from './Prediction';
 
-export interface IDrawResult extends Document {
+export interface IDrawResult extends Document<Types.ObjectId> {
   drawNumber: number;
   drawDate: Date;
   winningNumber: string;

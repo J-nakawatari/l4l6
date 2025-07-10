@@ -386,7 +386,7 @@ describe('DELETE /api/v1/admin/users/:id', () => {
       const adminToken = getAuthToken(admin);
 
       const response = await request(app)
-        .delete(deleteUserEndpoint(admin._id))
+        .delete(deleteUserEndpoint(admin._id.toString()))
         .set('Cookie', `token=${adminToken}`)
         .send({ reason: 'Self deletion' });
 
@@ -428,7 +428,7 @@ describe('POST /api/v1/admin/users/:id/send-email', () => {
       };
 
       const response = await request(app)
-        .post(sendEmailEndpoint(targetUser._id))
+        .post(sendEmailEndpoint(targetUser._id.toString()))
         .set('Cookie', `token=${adminToken}`)
         .send(emailData);
 
@@ -443,7 +443,7 @@ describe('POST /api/v1/admin/users/:id/send-email', () => {
       const targetUser = await createUser();
 
       const response = await request(app)
-        .post(sendEmailEndpoint(targetUser._id))
+        .post(sendEmailEndpoint(targetUser._id.toString()))
         .set('Cookie', `token=${adminToken}`)
         .send({
           template: 'subscription_reminder',
