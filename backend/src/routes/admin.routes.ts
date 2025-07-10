@@ -3,7 +3,6 @@ import { authenticate } from '../middleware/auth';
 import { adminAuth } from '../middleware/adminAuth';
 import adminAuthRoutes from './admin/auth.routes';
 import adminUserRoutes from './admin/users.routes';
-import adminAnalyticsRoutes from './admin/analytics.routes';
 
 const router = Router();
 
@@ -15,6 +14,5 @@ router.use(authenticate);
 router.use(adminAuth);
 
 router.use('/users', adminUserRoutes);
-router.use('/analytics', adminAnalyticsRoutes);
 
 export default router;

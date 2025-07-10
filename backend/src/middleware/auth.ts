@@ -27,6 +27,12 @@ export const authenticate = async (
       res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'User not found' } });
       return;
     }
+
+    // Check if user is suspended
+    if (user.suspended) {
+      res.status(403).json({ error: { code: 'ACCOUNT_SUSPENDED', message: 'Your account has been suspended' } });
+      return;
+    }
     
     req.user = user;
     
@@ -54,7 +60,7 @@ export const optionalAuthenticate = async (
     
     // Load full user from database
     const user = await User.findById(decoded.id).select('-password');
-    if (user) {
+    if (user && !user.suspended) {
       req.user = user;
     }
     

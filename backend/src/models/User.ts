@@ -17,6 +17,7 @@ export interface IUser extends Document<Types.ObjectId> {
   bio?: string;
   role: 'user' | 'admin';
   emailVerified: boolean;
+  suspended?: boolean;
   subscription?: ISubscription & { plan?: 'free' | 'basic' | 'premium'; planId?: string };
   emailNotifications?: {
     newPrediction: boolean;
@@ -71,6 +72,10 @@ const userSchema = new Schema<IUser>({
     default: 'user',
   },
   emailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  suspended: {
     type: Boolean,
     default: false,
   },
