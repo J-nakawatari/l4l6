@@ -36,8 +36,9 @@ const PredictionSchema = new mongoose.Schema({
   viewCount: { type: Number, default: 0 }
 }, { timestamps: true });
 
-const DrawResult = mongoose.model('DrawResult', DrawResultSchema);
-const Prediction = mongoose.model('Prediction', PredictionSchema);
+// モデルが既に定義されているかチェック
+const DrawResult = mongoose.models.DrawResult || mongoose.model('DrawResult', DrawResultSchema);
+const Prediction = mongoose.models.Prediction || mongoose.model('Prediction', PredictionSchema);
 
 // 日本の祝日データ（2024-2025年）
 const holidays = [
