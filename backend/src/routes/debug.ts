@@ -1,9 +1,9 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 
 const router = Router();
 
 // 環境変数確認用エンドポイント（本番環境でも有効）
-router.get('/env-check', (req, res) => {
+router.get('/env-check', (_req: Request, res: Response): void => {
   res.json({
     environment: {
       nodeEnv: process.env.NODE_ENV,
@@ -31,17 +31,18 @@ router.get('/env-check', (req, res) => {
 });
 
 // Stripe接続テスト（本番環境でも有効）
-router.get('/stripe-test', async (req, res) => {
+router.get('/stripe-test', async (_req: Request, res: Response): Promise<void> => {
   try {
     // Stripeライブラリをインポート
     const Stripe = require('stripe');
     
     if (!process.env.STRIPE_SECRET_KEY) {
-      return res.json({
+      res.json({
         success: false,
         error: 'STRIPE_SECRET_KEY が設定されていません',
         environment: process.env.NODE_ENV
       });
+      return;
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -75,7 +76,7 @@ router.get('/stripe-test', async (req, res) => {
 });
 
 // チェックアウトセッション作成の詳細デバッグ
-router.post('/checkout-debug', async (req, res) => {
+router.post('/checkout-debug', async (req: Request, res: Response): Promise<void> => {
   try {
     const Stripe = require('stripe');
     
@@ -84,10 +85,11 @@ router.post('/checkout-debug', async (req, res) => {
     console.log('リクエストボディ:', req.body);
     
     if (!process.env.STRIPE_SECRET_KEY) {
-      return res.json({
+      res.json({
         success: false,
         error: 'STRIPE_SECRET_KEY が設定されていません'
       });
+      return;
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
