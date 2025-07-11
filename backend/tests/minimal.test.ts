@@ -2,6 +2,7 @@ import request from 'supertest';
 import app from '../src/app';
 import { connectTestDB, closeTestDB, clearTestDB } from './helpers/db';
 import { User } from '../src/models/User';
+import { Admin } from '../src/models/Admin';
 
 beforeAll(async () => {
   await connectTestDB();
@@ -63,12 +64,13 @@ describe('必要最低限のテスト', () => {
 
   describe('管理者機能', () => {
     it('管理者がログインできる', async () => {
-      await User.create({
+      await Admin.create({
         email: 'admin@example.com',
         password: 'AdminPass123!',
         name: '管理者',
         role: 'admin',
-        emailVerified: true,
+        isActive: true,
+        permissions: ['users:read', 'users:write'],
       });
 
       const response = await request(app)
@@ -79,16 +81,17 @@ describe('必要最低限のテスト', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body.user?.role || response.body.admin?.role).toBe('admin');
+      expect(response.body.user.role).toBe('admin');
     });
 
     it('管理者はユーザー一覧を取得できる', async () => {
-      await User.create({
+      await Admin.create({
         email: 'admin@example.com',
         password: 'AdminPass123!',
         name: '管理者',
         role: 'admin',
-        emailVerified: true,
+        isActive: true,
+        permissions: ['users:read', 'users:write'],
       });
 
       const loginResponse = await request(app)
@@ -102,7 +105,7 @@ describe('必要最低限のテスト', () => {
 
       const response = await request(app)
         .get('/api/v1/admin/users')
-        .set('Cookie', `token=${token}`);
+        .set('Cookie', `adminToken=${token}`);
 
       expect(response.status).toBe(200);
       expect(response.body.users).toBeDefined();
@@ -124,13 +127,13 @@ describe('必要最低限のテスト', () => {
           password: 'UserPass123!',
         });
 
-      const token = loginResponse.body.token;
+      const userToken = loginResponse.body.token;
 
       const response = await request(app)
         .get('/api/v1/admin/users')
-        .set('Cookie', `token=${token}`);
+        .set('Cookie', `token=${userToken}`);
 
-      expect(response.status).toBeGreaterThanOrEqual(401); // 401 or 403
+      expect(response.status).toBe(401); // 管理者トークンがないため401
     });
   });
 
@@ -150,15 +153,17 @@ describe('必要最低限のテスト', () => {
           password: 'UserPass123!',
         });
 
+      // Cookieを取得
       const cookies = loginResponse.headers['set-cookie'];
-      const cookieString = Array.isArray(cookies) ? cookies[0] : cookies;
-
+      if (!cookies || cookies.length === 0) {
+        throw new Error('No cookies received from login response');
+      }
+      
       const response = await request(app)
         .get('/api/v1/predictions/latest')
-        .set('Cookie', cookieString || `token=${loginResponse.body.token}`);
+        .set('Cookie', cookies[0]);
 
-      // 予想データがない場合は404、権限がない場合は403の可能性がある
-      expect([200, 403, 404]).toContain(response.status);
+      expect(response.status).toBe(200);
     });
 
     it('未認証ユーザーは予想を取得できない', async () => {
