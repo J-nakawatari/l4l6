@@ -240,20 +240,29 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
     res.json({ url: session.url });
   } catch (error) {
     // === 本番環境用詳細エラーログ ===
-    console.error('❌ チェックアウトセッション作成エラー [詳細]:', {
-      message: error.message,
-      type: error.type,
-      code: error.code,
-      statusCode: error.statusCode,
-      raw: error.raw,
-      stack: error.stack?.split('\n').slice(0, 5), // スタックトレースの最初の5行のみ
+    const errorDetails: any = {
+      message: error instanceof Error ? error.message : 'Unknown error',
       timestamp: new Date().toISOString()
-    });
+    };
+
+    // Stripeエラーの場合は追加情報を含める
+    if (error && typeof error === 'object' && 'type' in error) {
+      const stripeError = error as any;
+      errorDetails.type = stripeError.type;
+      errorDetails.code = stripeError.code;
+      errorDetails.statusCode = stripeError.statusCode;
+      errorDetails.raw = stripeError.raw;
+      errorDetails.stack = stripeError.stack?.split('\n').slice(0, 5);
+    }
+
+    console.error('❌ チェックアウトセッション作成エラー [詳細]:', errorDetails);
     
     log.error('Failed to create checkout session', { error });
     res.status(500).json({ 
       error: 'Failed to create checkout session',
-      details: process.env.NODE_ENV === 'production' ? error.message : error
+      details: process.env.NODE_ENV === 'production' 
+        ? (error instanceof Error ? error.message : 'Unknown error')
+        : error
     });
   }
 });
