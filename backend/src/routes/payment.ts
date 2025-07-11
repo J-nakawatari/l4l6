@@ -116,8 +116,12 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
       emailVerified: user?.emailVerified
     });
 
-    if (user?.subscription?.status === 'active') {
-      console.log('❌ 既にアクティブなサブスクリプション存在');
+    // activeまたはcancelledで期限内の場合はブロック
+    if (user?.subscription?.status === 'active' || 
+        (user?.subscription?.status === 'cancelled' && 
+         user?.subscription?.currentPeriodEnd && 
+         new Date(user.subscription.currentPeriodEnd) > new Date())) {
+      console.log('❌ 既にサブスクリプション存在（activeまたはcancelled期限内）');
       res.status(400).json({ error: { code: 'ALREADY_SUBSCRIBED', message: 'Already have an active subscription' } });
       return;
     }

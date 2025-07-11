@@ -137,8 +137,8 @@ userSchema.methods.hasActiveSubscription = function(): boolean {
     return false;
   }
   
-  // activeまたはcancelledステータスをチェック
-  if (this.subscription.status !== 'active' && this.subscription.status !== 'cancelled') {
+  // activeステータスのみをチェック（cancelledは無効とする）
+  if (this.subscription.status !== 'active') {
     return false;
   }
   
