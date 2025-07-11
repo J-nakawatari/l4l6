@@ -32,7 +32,7 @@ const defaultPlans: Plan[] = [
     id: 'basic',
     name: 'ベーシックプラン',
     price: 0, // 動的に取得
-    priceId: 'price_1RjdEc016yQ2BmmpXSpWjIsP', // 本番用の定期支払い価格ID
+    priceId: 'price_1RjdDq016yQ2BmmpF2o4gkMJ', // 本番用の定期支払い価格ID
     features: [
       '次回予想15個を毎日更新',
       'AIハイブリッド予想（12個）',

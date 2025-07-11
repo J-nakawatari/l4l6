@@ -1,7 +1,9 @@
+const axios = require('axios');
+const cheerio = require('cheerio');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-// DrawResultスキーマ（150件のみ保持）
+// DrawResultスキーマ
 const DrawResultSchema = new mongoose.Schema({
   drawNumber: { type: Number, unique: true },
   drawDate: Date,
@@ -129,34 +131,98 @@ async function scrapeWithAxios() {
   return $;
 }
 
-async function updateLatestData() {
+async function scrapeMizuhoLatest() {
   try {
-    // まずaxiosで試す
-    console.log('=== Axios/Cheerioでの取得 ===');
-    await scrapeWithAxios().catch(err => {
-      console.error('Axiosエラー:', err.message);
-    });
-    
-    // puppeteerが必要な場合
-    console.log('\n=== Puppeteerでの取得（要インストール）===');
-    console.log('動的コンテンツの場合は以下を実行:');
-    console.log('npm install puppeteer');
-    console.log('その後、scrapeWithPuppeteer()を使用');
+    console.log('みずほ銀行から最新のNumbers4データを取得中...\n');
     
     // データベース接続
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/numbers4');
     
-    // 現在のデータ状況を確認
-    const currentCount = await DrawResult.countDocuments();
-    const latest = await DrawResult.findOne().sort({ drawNumber: -1 });
+    const response = await axios.get('https://www.mizuhobank.co.jp/takarakuji/check/numbers/numbers4/index.html', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
     
-    console.log(`\n現在のデータ: ${currentCount}件`);
-    if (latest) {
-      console.log(`最新: 第${latest.drawNumber}回 (${latest.drawDate.toLocaleDateString('ja-JP')})`);
+    const $ = cheerio.load(response.data);
+    
+    // 最新の結果を取得
+    const results = [];
+    
+    // テーブルから情報を取得
+    $('table').each((i, table) => {
+      const rows = $(table).find('tr');
+      let drawNumber, drawDate, winningNumber;
+      
+      rows.each((j, row) => {
+        const th = $(row).find('th').text().trim();
+        const td = $(row).find('td').text().trim();
+        
+        if (th.includes('回別')) {
+          const match = td.match(/第(\d+)回/);
+          if (match) drawNumber = parseInt(match[1]);
+        } else if (th.includes('抽せん日')) {
+          // 2025年07月11日(金) のような形式
+          const match = td.match(/(\d{4})年(\d{2})月(\d{2})日/);
+          if (match) {
+            drawDate = new Date(
+              parseInt(match[1]),
+              parseInt(match[2]) - 1,
+              parseInt(match[3])
+            );
+          }
+        } else if (th.includes('抽せん数字') || th.includes('当せん番号')) {
+          const match = td.match(/(\d{4})/);
+          if (match) winningNumber = match[1];
+        }
+      });
+      
+      if (drawNumber && drawDate && winningNumber) {
+        results.push({
+          drawNumber,
+          drawDate,
+          winningNumber
+        });
+      }
+    });
+    
+    console.log(`${results.length}件のデータを発見`);
+    
+    // 保存
+    let saved = 0;
+    for (const result of results) {
+      try {
+        const existing = await DrawResult.findOne({ drawNumber: result.drawNumber });
+        if (!existing) {
+          await DrawResult.create({
+            ...result,
+            prize: {
+              straight: { winners: 0, amount: 900000 },
+              box: { winners: 0, amount: 37500 }
+            },
+            fetchedAt: new Date()
+          });
+          console.log(`新規追加: 第${result.drawNumber}回 (${result.drawDate.toLocaleDateString('ja-JP')}): ${result.winningNumber}`);
+          saved++;
+        } else {
+          console.log(`既存: 第${result.drawNumber}回`);
+        }
+      } catch (err) {
+        console.error(`エラー: ${err.message}`);
+      }
     }
     
-    // TODO: スクレイピングしたデータをパースして保存
-    // TODO: 150件を超えたら古いデータを削除
+    // 最新5件を表示
+    const latest = await DrawResult.find()
+      .sort({ drawNumber: -1 })
+      .limit(5);
+    
+    console.log('\n=== 最新の抽選結果 ===');
+    latest.forEach(r => {
+      console.log(`第${r.drawNumber}回: ${r.drawDate.toLocaleDateString('ja-JP')} - ${r.winningNumber}`);
+    });
+    
+    console.log(`\n新規保存: ${saved}件`);
     
   } catch (error) {
     console.error('エラー:', error.message);
@@ -166,4 +232,4 @@ async function updateLatestData() {
 }
 
 // 実行
-updateLatestData();
+scrapeMizuhoLatest();

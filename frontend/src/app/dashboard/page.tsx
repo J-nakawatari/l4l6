@@ -117,7 +117,7 @@ export default function DashboardPage() {
 
   const fetchPriceInfo = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/payments/price-info/price_1RjdEc016yQ2BmmpXSpWjIsP`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/payments/price-info/price_1RjdDq016yQ2BmmpF2o4gkMJ`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -143,7 +143,7 @@ export default function DashboardPage() {
         },
         credentials: 'include',
         body: JSON.stringify({
-          priceId: 'price_1RjdEc016yQ2BmmpXSpWjIsP'
+          priceId: 'price_1RjdDq016yQ2BmmpF2o4gkMJ'
         }),
       });
 
