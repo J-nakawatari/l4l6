@@ -8,8 +8,6 @@ import AnimatedNumbers from '@/components/UI/AnimatedNumbers';
 export default function HomePage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [predictedNumbers, setPredictedNumbers] = useState(['7', '4', '9', '2']);
 
   const algorithms = [
     {
@@ -42,35 +40,12 @@ export default function HomePage() {
     }
   ];
 
-  const processingSteps = [
-    "量子ビット初期化中...",
-    "データマイニング実行中...",
-    "機械学習モデル訓練中...",
-    "統計的有意性検証中...",
-    "ニューラルネットワーク最適化中...",
-    "予測モデル統合中..."
-  ];
-
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentStep((prev) => (prev + 1) % algorithms.length);
     }, 3000);
     return () => clearInterval(interval);
   }, []);
-
-  // 新しい予想数字を生成する関数
-  const generateNewPrediction = () => {
-    const newNumbers = Array.from({ length: 4 }, () => 
-      Math.floor(Math.random() * 10).toString()
-    );
-    setPredictedNumbers(newNumbers);
-  };
-
-  const startProcessing = () => {
-    setIsProcessing(true);
-    generateNewPrediction();
-    setTimeout(() => setIsProcessing(false), 6000);
-  };
 
   return (
     <main className="min-h-screen bg-white">
@@ -116,29 +91,16 @@ export default function HomePage() {
             複雑な統計計算をあなたの代わりに実行します
           </p>
           
-          {/* AI予想数字表示（アニメーション付き） */}
+          {/* AI予想数字表示（演出のみ） */}
           <div className="bg-white text-gray-800 rounded-2xl p-8 mb-8 max-w-md mx-auto border-2 border-blue-500">
             <p className="text-sm mb-4 text-gray-600">AI予想 次回数字</p>
             
             <AnimatedNumbers
-              finalNumbers={predictedNumbers}
-              autoStart={true}
+              finalNumbers={['7', '4', '9', '2']}
               duration={2500}
-              onCalculationComplete={() => {
-                console.log('計算完了!');
-              }}
             />
             
             <p className="text-xs mt-4 text-gray-500">※ 会員登録で最新予想を確認</p>
-            
-            {/* 再計算ボタン */}
-            <button
-              onClick={startProcessing}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition"
-              disabled={isProcessing}
-            >
-              {isProcessing ? '計算中...' : '再計算'}
-            </button>
           </div>
           
           <button
