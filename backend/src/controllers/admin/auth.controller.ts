@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 export const adminLogin = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
+    console.log('[Admin Login] Attempt:', { email });
 
     if (!email || !password) {
       res.status(400).json({ error: { code: 'MISSING_FIELDS', message: 'Email and password are required' } });
@@ -13,6 +14,7 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
 
     // Find admin user
     const admin = await Admin.findOne({ email, isActive: true });
+    console.log('[Admin Login] Found admin:', admin ? 'Yes' : 'No');
     if (!admin) {
       res.status(401).json({ error: { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' } });
       return;
@@ -20,6 +22,7 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
 
     // Check password
     const isValid = await admin.comparePassword(password);
+    console.log('[Admin Login] Password valid:', isValid);
     if (!isValid) {
       res.status(401).json({ error: { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' } });
       return;

@@ -55,7 +55,7 @@ const Admin = mongoose.model('Admin', AdminSchema);
 
 async function createAdmin() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/numbers4');
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/charactier');
     
     const email = process.argv[2];
     const password = process.argv[3];

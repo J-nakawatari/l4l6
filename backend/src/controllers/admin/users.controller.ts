@@ -1,9 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { User } from '../../models/User';
 import Stripe from 'stripe';
 import { log } from '../../utils/logger';
+import { AdminRequest } from '../../middleware/adminAuth';
 
-export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
+export const getUsers = async (req: AdminRequest, res: Response, next: NextFunction) => {
   try {
     const { page = 1, limit = 20, search, status } = req.query;
     const query: any = {};
@@ -48,7 +49,7 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
   }
 };
 
-export const getUserById = async (_req: Request, res: Response, next: NextFunction) => {
+export const getUserById = async (_req: AdminRequest, res: Response, next: NextFunction) => {
   try {
     // TODO: Implement get user by ID
     res.json({ message: 'Get user by ID not implemented' });
@@ -57,7 +58,7 @@ export const getUserById = async (_req: Request, res: Response, next: NextFuncti
   }
 };
 
-export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
+export const updateUser = async (req: AdminRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const { action } = req.body;
@@ -85,7 +86,7 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
   }
 };
 
-export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteUser = async (req: AdminRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     
