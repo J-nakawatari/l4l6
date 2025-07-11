@@ -24,6 +24,7 @@ interface User {
   subscription?: {
     status: 'active' | 'inactive' | 'cancelled';
     plan?: 'free' | 'basic';
+    currentPeriodEnd?: string;
   };
 }
 
@@ -244,6 +245,22 @@ export default function DashboardPage() {
             >
               {isCheckingOut ? '処理中...' : `サブスク加入する（${priceInfo ? `月額${priceInfo.amount}円` : '月額1000円'}）`}
             </button>
+          </div>
+        )}
+        
+        {/* キャンセル済みで期限内の場合の通知 */}
+        {user?.subscription?.status === 'cancelled' && 
+         user?.subscription?.currentPeriodEnd && 
+         new Date(user.subscription.currentPeriodEnd) > new Date() && (
+          <div className="mb-8 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-300 dark:border-orange-700 rounded-lg">
+            <p className="text-sm text-orange-800 dark:text-orange-200">
+              <span className="font-semibold">サブスクリプションはキャンセルされています。</span>
+              {new Date(user.subscription.currentPeriodEnd).toLocaleDateString('ja-JP', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}まで引き続きご利用いただけます。
+            </p>
           </div>
         )}
 

@@ -196,12 +196,24 @@ export default function SubscriptionPage() {
         <h1 className="text-3xl font-bold text-gray-900 mb-8">プランを選択</h1>
 
         {currentSubscription && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-            <p className="text-blue-800">
+          <div className={`border rounded-lg p-4 mb-8 ${
+            currentSubscription.status === 'cancelled' 
+              ? 'bg-orange-50 border-orange-200' 
+              : 'bg-blue-50 border-blue-200'
+          }`}>
+            <p className={`font-semibold ${
+              currentSubscription.status === 'cancelled' ? 'text-orange-800' : 'text-blue-800'
+            }`}>
               現在のプラン: {currentSubscription.plan === 'premium' ? 'プレミアムプラン' : 'ベーシックプラン'}
+              {currentSubscription.status === 'cancelled' && ' (キャンセル済み)'}
             </p>
-            <p className="text-sm text-blue-600">
-              有効期限: {new Date(currentSubscription.currentPeriodEnd || currentSubscription.expiresAt || '').toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' })}
+            <p className={`text-sm ${
+              currentSubscription.status === 'cancelled' ? 'text-orange-600' : 'text-blue-600'
+            }`}>
+              {currentSubscription.status === 'cancelled' 
+                ? `${new Date(currentSubscription.currentPeriodEnd || currentSubscription.expiresAt || '').toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}まで引き続きご利用いただけます`
+                : `有効期限: ${new Date(currentSubscription.currentPeriodEnd || currentSubscription.expiresAt || '').toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' })}`
+              }
             </p>
           </div>
         )}
