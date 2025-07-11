@@ -27,11 +27,11 @@ interface CurrentSubscription {
   stripeSubscriptionId?: string;
 }
 
-const plans: Plan[] = [
+const defaultPlans: Plan[] = [
   {
     id: 'basic',
     name: 'ベーシックプラン',
-    price: 980,
+    price: 0, // 動的に取得
     priceId: 'price_1RjdEc016yQ2BmmpXSpWjIsP', // 本番用の定期支払い価格ID
     features: [
       '次回予想15個を毎日更新',
@@ -46,6 +46,7 @@ const plans: Plan[] = [
 
 export default function SubscriptionPage() {
   const router = useRouter();
+  const [plans, setPlans] = useState<Plan[]>(defaultPlans);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +54,35 @@ export default function SubscriptionPage() {
 
   useEffect(() => {
     fetchCurrentSubscription();
+    fetchPrices();
   }, []);
+
+  const fetchPrices = async () => {
+    try {
+      const updatedPlans = await Promise.all(
+        defaultPlans.map(async (plan) => {
+          try {
+            const response = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/payments/price-info/${plan.priceId}`
+            );
+            if (response.ok) {
+              const priceData = await response.json();
+              return {
+                ...plan,
+                price: priceData.amount ? priceData.amount / 100 : plan.price, // Stripeは金額をセントで返すので100で割る
+              };
+            }
+          } catch (error) {
+            console.error(`Error fetching price for ${plan.id}:`, error);
+          }
+          return plan;
+        })
+      );
+      setPlans(updatedPlans);
+    } catch (error) {
+      console.error('Error fetching prices:', error);
+    }
+  };
 
   const fetchCurrentSubscription = async () => {
     try {
@@ -207,7 +236,11 @@ export default function SubscriptionPage() {
 
               <div className="mb-6">
                 <p className="text-3xl sm:text-4xl font-bold text-gray-900">
-                  月額 {plan.price.toLocaleString()}円
+                  {plan.price === 0 ? (
+                    <span className="text-gray-400">価格を読み込み中...</span>
+                  ) : (
+                    <>月額 {plan.price.toLocaleString()}円</>
+                  )}
                 </p>
               </div>
 
