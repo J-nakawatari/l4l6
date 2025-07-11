@@ -55,6 +55,7 @@ app.use(errorRateMonitoring);
 
 // Stripe Webhook用の生データを保持するミドルウェア（express.jsonより前に設定）
 app.use('/api/v1/payments/webhook', express.raw({ type: 'application/json' }));
+app.use('/webhook/stripe', express.raw({ type: 'application/json' }));
 
 // 基本的なミドルウェア
 app.use(express.json());
@@ -78,6 +79,11 @@ app.get('/health', (_req, res) => {
 
 // ルートを追加
 import routes from './routes';
+import paymentRoutes from './routes/payment';
+
+// Stripe Webhook用の特別なルート（charactier-ai.com用）
+app.use('/webhook', paymentRoutes);
+
 app.use(routes);
 
 // エラーハンドリング

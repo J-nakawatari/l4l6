@@ -222,7 +222,7 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'subscription',
-      success_url: `${process.env.FRONTEND_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${process.env.FRONTEND_URL}/dashboard?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.FRONTEND_URL}/subscription`,
       customer_email: userEmail,
       metadata: {
@@ -427,8 +427,8 @@ router.post('/cancel-subscription', authMiddleware, async (req: any, res): Promi
   }
 });
 
-// Stripe Webhook
-router.post('/webhook', async (req, res): Promise<void> => {
+// Stripe Webhook用のハンドラー関数
+const webhookHandler = async (req: any, res: any): Promise<void> => {
   log.info('Webhook received', {
     headers: req.headers,
     bodyLength: req.body?.length,
@@ -582,7 +582,12 @@ router.post('/webhook', async (req, res): Promise<void> => {
     log.error('Error processing webhook', { error, eventType: event.type });
     res.status(500).json({ error: { code: 'WEBHOOK_ERROR', message: 'Failed to process webhook' } });
   }
-});
+};
 
+// 通常のルートとして登録
+router.post('/webhook', webhookHandler);
+
+// /webhook/stripe 用の互換性ルート
+router.post('/stripe', webhookHandler);
 
 export default router;

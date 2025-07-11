@@ -133,7 +133,12 @@ userSchema.methods.comparePassword = async function(candidatePassword: string): 
 
 // サブスクリプション有効チェック
 userSchema.methods.hasActiveSubscription = function(): boolean {
-  if (!this.subscription || this.subscription.status !== 'active') {
+  if (!this.subscription) {
+    return false;
+  }
+  
+  // activeまたはcancelledステータスをチェック
+  if (this.subscription.status !== 'active' && this.subscription.status !== 'cancelled') {
     return false;
   }
   
