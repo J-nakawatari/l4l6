@@ -65,12 +65,11 @@ describe('Payment Routes', () => {
   
   describe('POST /api/v1/payments/create-checkout-session', () => {
     const endpoint = '/api/v1/payments/create-checkout-session';
-    let testUser: any;
     let authToken: string;
 
     beforeEach(async () => {
       // テストユーザーを作成
-      testUser = await createUser({
+      await createUser({
         email: 'test@example.com',
         password: 'SecurePass123!',
         name: 'テストユーザー',

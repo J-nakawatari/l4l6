@@ -221,7 +221,7 @@ describe('POST /api/v1/admin/auth/logout', () => {
   const adminLogoutEndpoint = '/api/v1/admin/auth/logout';
   
   it('管理者セッションはすべてのデバイスから無効化される', async () => {
-    const admin = await createAdmin();
+    await createAdmin();
     const token1 = 'admin_token_device1';
     const token2 = 'admin_token_device2';
 
