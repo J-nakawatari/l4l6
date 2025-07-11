@@ -75,10 +75,10 @@ export const getLatestPrediction = async (req: AuthenticatedRequest, res: Respon
     }
 
     // サブスクリプション確認（activeまたはcancelledでも期限内なら有効）
-    const hasActiveSubscription = req.user.subscription && 
+    const hasActiveSubscription: boolean = !!(req.user.subscription && 
       (req.user.subscription.status === 'active' || req.user.subscription.status === 'cancelled') && 
       req.user.subscription.currentPeriodEnd !== undefined &&
-      new Date(req.user.subscription.currentPeriodEnd) > new Date();
+      new Date(req.user.subscription.currentPeriodEnd) > new Date());
     
     // 期限切れチェック
     if (req.user.subscription?.status === 'active' && 
