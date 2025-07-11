@@ -76,7 +76,7 @@ router.get('/stripe-test', async (_req: Request, res: Response): Promise<void> =
 });
 
 // チェックアウトセッション作成の詳細デバッグ
-router.post('/checkout-debug', async (req: Request, res: Response): Promise<void> => {
+router.post('/checkout-debug', async (_req: Request, res: Response): Promise<void> => {
   try {
     // Stripeライブラリはすでにインポート済み
     
