@@ -11,6 +11,15 @@ import { connectDB } from './config/database';
 // 環境変数の読み込み
 dotenv.config();
 
+// === Stripeエラー対応: 環境変数デバッグログ ===
+console.log('🔧 === 環境変数確認 ===');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('STRIPE_SECRET_KEY 存在:', !!process.env.STRIPE_SECRET_KEY);
+console.log('STRIPE_SECRET_KEY 先頭:', process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.substring(0, 12) + '...' : '未設定');
+console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+console.log('MONGODB_URI 存在:', !!process.env.MONGODB_URI);
+console.log('===============================');
+
 // MongoDB接続
 if (process.env.NODE_ENV !== 'test') {
   connectDB().catch((error) => {
