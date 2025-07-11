@@ -70,29 +70,11 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* メインビジュアル */}
-      <section className="bg-blue-500 text-white py-20">
+      {/* AI数字演出セクション */}
+      <section className="bg-gray-50 py-20">
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <div className="mb-8">
-            <div className="inline-block animate-bounce">
-              <svg width="120" height="120" viewBox="0 0 120 120" className="mx-auto mb-6">
-                <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2"/>
-                <circle cx="60" cy="60" r="40" fill="rgba(255,255,255,0.1)" stroke="white" strokeWidth="3"/>
-                <text x="60" y="70" textAnchor="middle" className="fill-white text-2xl font-bold">AI</text>
-              </svg>
-            </div>
-          </div>
-          
-          <h2 className="text-5xl font-bold mb-6">
-            データが語る、明日の数字
-          </h2>
-          <p className="text-xl mb-8 max-w-3xl mx-auto">
-            4つの高度アルゴリズムが過去100回分のデータを解析<br/>
-            複雑な統計計算をあなたの代わりに実行します
-          </p>
-          
           {/* AI数字演出（繰り返し） */}
-          <div className="bg-white text-gray-800 rounded-2xl p-8 mb-8 max-w-md mx-auto border-2 border-blue-500">
+          <div className="bg-white text-gray-800 rounded-2xl p-8 mb-8 max-w-md mx-auto border-2 border-blue-500 shadow-xl">
             <AnimatedNumbers
               finalNumbers={['7', '4', '9', '2']}
               duration={2500}
@@ -101,25 +83,18 @@ export default function HomePage() {
             
             <p className="text-xs mt-4 text-gray-500">※ 会員登録で最新予想を確認</p>
           </div>
-          
-          <button
-            onClick={() => router.push('/register')}
-            className="bg-yellow-400 text-gray-800 px-8 py-4 rounded-lg text-lg font-bold hover:bg-yellow-500 transition"
-          >
-            今すぐ予想を見る
-          </button>
         </div>
       </section>
 
-      {/* 問題提起セクション */}
-      <section className="bg-yellow-400 py-20">
+      {/* 問題提起セクション（青背景 + CVボタン） */}
+      <section className="bg-blue-500 py-20">
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-4xl font-bold text-center text-white mb-4">
             Do you have any problem?
           </h2>
           <p className="text-center text-white mb-16">ナンバーズ4でこんなお悩みありませんか？</p>
           
-          <div className="grid md:grid-cols-3 gap-8 text-center">
+          <div className="grid md:grid-cols-3 gap-8 text-center mb-12">
             <div className="bg-white rounded-2xl p-8 shadow-xl">
               <div className="mb-6">
                 <svg width="80" height="80" className="mx-auto" viewBox="0 0 80 80">
@@ -152,6 +127,16 @@ export default function HomePage() {
               <h3 className="text-xl font-bold mb-4 text-gray-800">感覚だけで選んでいる</h3>
               <p className="text-gray-600">いつも勘に頼って数字を選んでしまい、根拠がない...</p>
             </div>
+          </div>
+
+          {/* CVボタン */}
+          <div className="text-center">
+            <button
+              onClick={() => router.push('/register')}
+              className="bg-yellow-400 text-gray-800 px-8 py-4 rounded-lg text-lg font-bold hover:bg-yellow-500 transition"
+            >
+              今すぐ予想を見る
+            </button>
           </div>
         </div>
       </section>
