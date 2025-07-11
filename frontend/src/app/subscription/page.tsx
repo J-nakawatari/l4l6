@@ -14,6 +14,7 @@ interface Plan {
   id: string;
   name: string;
   price: number;
+  priceId: string; // 価格IDを追加
   features: string[];
   recommended?: boolean;
 }
@@ -31,6 +32,7 @@ const plans: Plan[] = [
     id: 'basic',
     name: 'ベーシックプラン',
     price: 980,
+    priceId: 'price_1RjdEc016yQ2BmmpXSpWjIsP', // 正しい価格IDを設定
     features: [
       '次回予想15個を毎日更新',
       'AIハイブリッド予想（12個）',
@@ -107,6 +109,12 @@ export default function SubscriptionPage() {
     setError(null);
 
     try {
+      // 選択されたプランの価格IDを取得
+      const selectedPlanData = plans.find(plan => plan.id === planId);
+      if (!selectedPlanData) {
+        throw new Error('プランが見つかりません');
+      }
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/payments/create-checkout-session`, {
         method: 'POST',
         headers: {
@@ -116,6 +124,7 @@ export default function SubscriptionPage() {
         body: JSON.stringify({
           planId,
           billingPeriod: 'monthly',
+          priceId: selectedPlanData.priceId, // 価格IDを送信
         }),
       });
 
