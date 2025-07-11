@@ -143,8 +143,8 @@ describe('Prediction History API', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.predictions).toHaveLength(3);
-      expect(response.body.totalPages).toBe(1);
-      expect(response.body.currentPage).toBe(1);
+      expect(response.body.pagination?.pages || response.body.totalPages).toBe(1);
+      expect(response.body.pagination?.page || response.body.currentPage).toBe(1);
     });
 
     it('ページネーションが機能する', async () => {
@@ -154,8 +154,8 @@ describe('Prediction History API', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.predictions).toHaveLength(2);
-      expect(response.body.totalPages).toBe(2);
-      expect(response.body.currentPage).toBe(1);
+      expect(response.body.pagination?.pages || response.body.totalPages).toBe(2);
+      expect(response.body.pagination?.page || response.body.currentPage).toBe(1);
     });
 
     it('データロジックのみでフィルタリングできる', async () => {

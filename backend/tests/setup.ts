@@ -2,8 +2,8 @@
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
-process.env.MONGODB_URI = 'mongodb://localhost:27017/l4l6-test';
-process.env.DATABASE_URL = 'mongodb://localhost:27017/l4l6-test'; // 互換性のため両方設定
+process.env.MONGODB_URI = 'mongodb://admin:password@localhost:27017/l4l6-test?authSource=admin';
+process.env.DATABASE_URL = 'mongodb://admin:password@localhost:27017/l4l6-test?authSource=admin'; // 互換性のため両方設定
 process.env.STRIPE_SECRET_KEY = 'sk_test_dummy_key_for_testing';
 process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_dummy_secret';
 process.env.FRONTEND_URL = 'http://localhost:3001';
