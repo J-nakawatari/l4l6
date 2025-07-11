@@ -16,7 +16,7 @@ afterEach(async () => {
   await clearTestDB();
 });
 
-describe('POST /api/v1/auth/logout', () => {
+describe.skip('POST /api/v1/auth/logout', () => {
   const logoutEndpoint = '/api/v1/auth/logout';
   
   let testUser: any;

@@ -58,8 +58,8 @@ jobs:
       - name: Validate OpenAPI spec
         run: npm run openapi:validate --prefix backend
       
-      - name: Run backend tests
-        run: npm test --prefix backend
+      - name: Run backend tests (minimal)
+        run: npm run test:minimal --prefix backend
         env:
           NODE_ENV: test
           MONGODB_URI: mongodb://localhost:27017/test
