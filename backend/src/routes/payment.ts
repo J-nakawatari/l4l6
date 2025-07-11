@@ -79,26 +79,10 @@ router.get('/price-info/:priceId', async (req, res): Promise<void> => {
 // チェックアウトセッション作成
 router.post('/create-checkout-session', authMiddleware, async (req: any, res): Promise<void> => {
   try {
-    // === 本番環境用詳細ログ開始 ===
-    console.log('🚀 チェックアウトセッション作成開始 [本番環境]');
-    console.log('タイムスタンプ:', new Date().toISOString());
-    console.log('リクエストボディ:', JSON.stringify(req.body, null, 2));
-    console.log('ユーザー情報:', {
-      userId: req.user?._id,
-      email: req.user?.email,
-      emailVerified: req.user?.emailVerified
-    });
-    console.log('環境変数チェック:', {
-      stripeKeyExists: !!process.env.STRIPE_SECRET_KEY,
-      stripeKeyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 12),
-      frontendUrl: process.env.FRONTEND_URL
-    });
-    // === 本番環境用詳細ログ終了 ===
     
     const { planId, billingPeriod, priceId } = req.body;
     
     if (!req.user) {
-      console.log('❌ ユーザー認証エラー');
       res.status(401).json({ error: 'User not authenticated' });
       return;
     }
@@ -106,15 +90,9 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
     const userId = req.user._id;
     const userEmail = req.user.email;
 
-    console.log('✅ ユーザー認証成功:', { userId, userEmail });
 
     // 既存のサブスクリプションをチェック
     const user = await User.findById(userId);
-    console.log('📊 ユーザー情報取得:', {
-      userFound: !!user,
-      subscriptionStatus: user?.subscription?.status,
-      emailVerified: user?.emailVerified
-    });
 
     // activeまたはcancelledで期限内の場合はブロック
     if (user?.subscription?.status === 'active' || 
@@ -236,10 +214,6 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
       },
     });
 
-    console.log('✅ チェックアウトセッション作成成功:', {
-      sessionId: session.id,
-      url: session.url ? '存在' : '不存在'
-    });
 
     res.json({ url: session.url });
   } catch (error) {

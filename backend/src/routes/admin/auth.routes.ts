@@ -18,7 +18,7 @@ router.get('/me', adminAuth, async (req: any, res) => {
       return;
     }
     res.json({ admin });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: { code: 'SERVER_ERROR', message: 'Failed to get admin info' } });
   }
 });

@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import Stripe from 'stripe';
 
 const router = Router();
 
@@ -33,8 +34,7 @@ router.get('/env-check', (_req: Request, res: Response): void => {
 // Stripe接続テスト（本番環境でも有効）
 router.get('/stripe-test', async (_req: Request, res: Response): Promise<void> => {
   try {
-    // Stripeライブラリをインポート
-    const Stripe = require('stripe');
+    // Stripeライブラリはすでにインポート済み
     
     if (!process.env.STRIPE_SECRET_KEY) {
       res.json({
@@ -78,11 +78,7 @@ router.get('/stripe-test', async (_req: Request, res: Response): Promise<void> =
 // チェックアウトセッション作成の詳細デバッグ
 router.post('/checkout-debug', async (req: Request, res: Response): Promise<void> => {
   try {
-    const Stripe = require('stripe');
-    
-    console.log('🚀 チェックアウトデバッグ開始');
-    console.log('環境:', process.env.NODE_ENV);
-    console.log('リクエストボディ:', req.body);
+    // Stripeライブラリはすでにインポート済み
     
     if (!process.env.STRIPE_SECRET_KEY) {
       res.json({
@@ -123,7 +119,6 @@ router.post('/checkout-debug', async (req: Request, res: Response): Promise<void
     });
 
   } catch (error: any) {
-    console.error('❌ チェックアウトエラー:', error);
     res.json({
       success: false,
       error: error.message,
