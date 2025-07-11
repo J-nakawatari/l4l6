@@ -5,35 +5,33 @@ import { useState, useEffect, useRef } from 'react';
 interface AnimatedNumbersProps {
   finalNumbers?: string[];
   duration?: number;
+  repeatInterval?: number;
   className?: string;
 }
 
 export default function AnimatedNumbers({
   finalNumbers = ['7', '4', '9', '2'],
   duration = 2500,
+  repeatInterval = 8000, // 8秒ごとに繰り返し
   className = ''
 }: AnimatedNumbersProps) {
   const [displayNumbers, setDisplayNumbers] = useState(['?', '?', '?', '?']);
   const [isAnimating, setIsAnimating] = useState(false);
-  const hasStarted = useRef(false);
 
   // ランダムな数字を生成（0-9）
   const generateRandomNumbers = () => {
     return Array.from({ length: 4 }, () => Math.floor(Math.random() * 10).toString());
   };
 
-  // 計算エフェクトを開始（一度だけ実行）
+  // 計算エフェクトを実行
   const startCalculation = () => {
-    if (hasStarted.current) return;
-    hasStarted.current = true;
-    
     setIsAnimating(true);
     setDisplayNumbers(['?', '?', '?', '?']);
 
     // 高速でランダム数字を表示
     const animationInterval = setInterval(() => {
       setDisplayNumbers(generateRandomNumbers());
-    }, 120); // 120msごとに数字が変わる
+    }, 120);
 
     // 指定時間後にアニメーション停止
     setTimeout(() => {
@@ -54,18 +52,27 @@ export default function AnimatedNumbers({
           clearInterval(revealInterval);
           setIsAnimating(false);
         }
-      }, 250); // 250msごとに1つずつ確定
+      }, 250);
       
     }, duration);
   };
 
-  // ページ読み込み後に自動開始（一度だけ）
+  // 初回実行と繰り返し設定
   useEffect(() => {
-    const timer = setTimeout(() => {
+    // 初回実行
+    const initialTimer = setTimeout(() => {
       startCalculation();
-    }, 1500); // 1.5秒後に開始
-    
-    return () => clearTimeout(timer);
+    }, 1500);
+
+    // 繰り返し実行
+    const repeatTimer = setInterval(() => {
+      startCalculation();
+    }, repeatInterval);
+
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(repeatTimer);
+    };
   }, []);
 
   return (
