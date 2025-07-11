@@ -4,10 +4,130 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
+// 数字アニメーションコンポーネント
+const AnimatedNumber = ({ finalNumber, delay = 0 }: { finalNumber: number, delay?: number }) => {
+  const [currentNumber, setCurrentNumber] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(true);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      let count = 0;
+      const interval = setInterval(() => {
+        setCurrentNumber(Math.floor(Math.random() * 10));
+        count++;
+        
+        // 15回ランダムに変化した後、最終的な数字に落ち着く
+        if (count >= 15) {
+          clearInterval(interval);
+          setCurrentNumber(finalNumber);
+          setIsAnimating(false);
+        }
+      }, 100);
+
+      return () => clearInterval(interval);
+    }, delay);
+
+    return () => clearTimeout(timeout);
+  }, [finalNumber, delay]);
+
+  return (
+    <span className={`inline-block transition-all duration-100 ${isAnimating ? 'text-blue-600' : 'text-blue-800'}`}>
+      {currentNumber}
+    </span>
+  );
+};
+
+// 数字予想表示コンポーネント
+const PredictionDisplay = () => {
+  const [isAnalyzing, setIsAnalyzing] = useState(true);
+  const [showFinal, setShowFinal] = useState(false);
+  
+  // 最終的な予想数字
+  const finalNumbers = [1, 2, 3, 4];
+
+  useEffect(() => {
+    // 6秒後に分析完了
+    const timer = setTimeout(() => {
+      setIsAnalyzing(false);
+      setShowFinal(true);
+    }, 6000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 分析を再開する関数
+  const restartAnalysis = () => {
+    setIsAnalyzing(true);
+    setShowFinal(false);
+    
+    setTimeout(() => {
+      setIsAnalyzing(false);
+      setShowFinal(true);
+    }, 6000);
+  };
+
+  return (
+    <div className="bg-white text-gray-800 rounded-2xl p-8 mb-8 max-w-md mx-auto border-2 border-blue-500 relative">
+      <p className="text-sm mb-4 text-gray-600">AI予想 次回数字</p>
+      
+      {/* 分析中の表示 */}
+      {isAnalyzing && (
+        <div className="mb-4">
+          <div className="flex items-center justify-center space-x-2 mb-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+          </div>
+          <p className="text-xs text-blue-600 animate-pulse">統計解析実行中...</p>
+        </div>
+      )}
+      
+      {/* 数字表示 */}
+      <div className="text-6xl font-black mb-4 tracking-wider">
+        {isAnalyzing ? (
+          <div className="space-x-2">
+            <AnimatedNumber finalNumber={finalNumbers[0]} delay={0} />
+            <AnimatedNumber finalNumber={finalNumbers[1]} delay={300} />
+            <AnimatedNumber finalNumber={finalNumbers[2]} delay={600} />
+            <AnimatedNumber finalNumber={finalNumbers[3]} delay={900} />
+          </div>
+        ) : (
+          <div className="text-blue-800 space-x-2">
+            <span>1</span>
+            <span>2</span>
+            <span>3</span>
+            <span>4</span>
+          </div>
+        )}
+      </div>
+      
+      {/* 分析完了後の表示 */}
+      {showFinal && (
+        <div className="text-center">
+          <p className="text-xs text-green-600 mb-2">✅ 解析完了</p>
+          <button 
+            onClick={restartAnalysis}
+            className="text-xs text-blue-500 hover:text-blue-700 underline"
+          >
+            再解析
+          </button>
+        </div>
+      )}
+      
+      {/* 会員登録案内 */}
+      <p className="text-xs mt-4 text-gray-500">※ 会員登録で最新予想を確認</p>
+      
+      {/* 分析中のエフェクト */}
+      {isAnalyzing && (
+        <div className="absolute inset-0 bg-blue-50 opacity-20 rounded-2xl animate-pulse"></div>
+      )}
+    </div>
+  );
+};
+
 export default function HomePage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   const algorithms = [
     {
@@ -40,26 +160,12 @@ export default function HomePage() {
     }
   ];
 
-  const processingSteps = [
-    "量子ビット初期化中...",
-    "データマイニング実行中...",
-    "機械学習モデル訓練中...",
-    "統計的有意性検証中...",
-    "ニューラルネットワーク最適化中...",
-    "予測モデル統合中..."
-  ];
-
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentStep((prev) => (prev + 1) % algorithms.length);
     }, 3000);
     return () => clearInterval(interval);
   }, []);
-
-  const startProcessing = () => {
-    setIsProcessing(true);
-    setTimeout(() => setIsProcessing(false), 6000);
-  };
 
   return (
     <main className="min-h-screen bg-white">
@@ -105,12 +211,8 @@ export default function HomePage() {
             複雑な統計計算をあなたの代わりに実行します
           </p>
           
-          {/* 予想数字表示 */}
-          <div className="bg-white text-gray-800 rounded-2xl p-8 mb-8 max-w-md mx-auto border-2 border-blue-500">
-            <p className="text-sm mb-4 text-gray-600">AI予想 次回数字</p>
-            <div className="text-6xl font-black text-blue-800">1 2 3 4</div>
-            <p className="text-xs mt-4 text-gray-500">※ 会員登録で最新予想を確認</p>
-          </div>
+          {/* アニメーション付き予想数字表示 */}
+          <PredictionDisplay />
           
           <button
             onClick={() => router.push('/register')}
