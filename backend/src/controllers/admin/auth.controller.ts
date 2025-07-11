@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { User } from '../../models/User';
+import { Admin } from '../../models/Admin';
 import jwt from 'jsonwebtoken';
 
 export const adminLogin = async (req: Request, res: Response, next: NextFunction) => {
@@ -12,28 +12,32 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
     }
 
     // Find admin user
-    const user = await User.findOne({ email, role: 'admin' });
-    if (!user) {
+    const admin = await Admin.findOne({ email, isActive: true });
+    if (!admin) {
       res.status(401).json({ error: { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' } });
       return;
     }
 
     // Check password
-    const isValid = await user.comparePassword(password);
+    const isValid = await admin.comparePassword(password);
     if (!isValid) {
       res.status(401).json({ error: { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' } });
       return;
     }
+    
+    // Update last login
+    admin.lastLoginAt = new Date();
+    await admin.save();
 
     // Generate token
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
+      { id: admin._id, email: admin.email, role: admin.role, isAdmin: true },
       process.env.JWT_SECRET!,
       { expiresIn: '7d' }
     );
 
     // Set cookie
-    res.cookie('token', token, {
+    res.cookie('adminToken', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
@@ -42,10 +46,10 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
 
     res.json({
       user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
+        id: admin._id,
+        email: admin.email,
+        name: admin.name,
+        role: admin.role,
       },
       token,
     });
@@ -65,7 +69,7 @@ export const verify2FA = async (_req: Request, res: Response, next: NextFunction
 
 export const adminLogout = async (_req: Request, res: Response, next: NextFunction) => {
   try {
-    res.clearCookie('token');
+    res.clearCookie('adminToken');
     res.json({ message: 'Logged out successfully' });
   } catch (error) {
     next(error);
