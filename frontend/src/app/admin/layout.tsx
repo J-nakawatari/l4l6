@@ -28,7 +28,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/auth/me`, {
         credentials: 'include',
       });
 
@@ -38,8 +38,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       const data = await response.json();
       
-      // 管理者でない場合はログインページへ
-      if (data.user.role !== 'admin') {
+      // 管理者確認（adminオブジェクトが返ってくる）
+      if (!data.admin) {
         throw new Error('Not admin');
       }
     } catch (error) {
