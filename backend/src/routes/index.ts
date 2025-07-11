@@ -22,10 +22,8 @@ v1Router.use('/payments', paymentRoutes);
 v1Router.use('/draw-results', drawResultsRoutes);
 v1Router.use('/backtest', backtestRoutes);
 
-// デバッグルート（開発環境でのみ）
-if (process.env.NODE_ENV !== 'production') {
-  v1Router.use('/debug', debugRoutes);
-}
+// デバッグルート（本番環境でも有効）
+v1Router.use('/debug', debugRoutes);
 
 // メインルーターに統合
 router.use('/api/v1', v1Router);
