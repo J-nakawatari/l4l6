@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import AnimatedNumbers from '@/components/UI/AnimatedNumbers';
 
 export default function HomePage() {
   const router = useRouter();
@@ -69,22 +68,6 @@ export default function HomePage() {
           </div>
         </div>
       </header>
-
-      {/* AI数字演出セクション */}
-      <section className="bg-gray-50 py-20">
-        <div className="max-w-6xl mx-auto px-4 text-center">
-          {/* AI数字演出（繰り返し） */}
-          <div className="bg-white text-gray-800 rounded-2xl p-8 mb-8 max-w-md mx-auto border-2 border-blue-500 shadow-xl">
-            <AnimatedNumbers
-              finalNumbers={['7', '4', '9', '2']}
-              duration={2500}
-              repeatInterval={8000}
-            />
-            
-            <p className="text-xs mt-4 text-gray-500">※ 会員登録で最新予想を確認</p>
-          </div>
-        </div>
-      </section>
 
       {/* 問題提起セクション（青背景 + CVボタン） */}
       <section className="bg-blue-500 py-20">
