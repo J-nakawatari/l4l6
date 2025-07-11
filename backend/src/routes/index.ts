@@ -7,6 +7,7 @@ import adminRoutes from './admin.routes';
 import paymentRoutes from './payment';
 import drawResultsRoutes from './drawResults';
 import backtestRoutes from './backtest';
+import debugRoutes from './debug'; // 追加
 import { RouteRegistry } from '../utils/routeRegistry';
 
 const router = Router();
@@ -20,6 +21,11 @@ v1Router.use('/admin', adminRoutes);
 v1Router.use('/payments', paymentRoutes);
 v1Router.use('/draw-results', drawResultsRoutes);
 v1Router.use('/backtest', backtestRoutes);
+
+// デバッグルート（開発環境でのみ）
+if (process.env.NODE_ENV !== 'production') {
+  v1Router.use('/debug', debugRoutes);
+}
 
 // メインルーターに統合
 router.use('/api/v1', v1Router);
