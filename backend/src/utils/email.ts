@@ -59,15 +59,15 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
 
   // SendGridでメール送信
   if (process.env.SENDGRID_API_KEY) {
-    try {
-      const msg = {
-        to: options.to,
-        from: process.env.SENDGRID_FROM_EMAIL || process.env.FROM_EMAIL || 'noreply@example.com',
-        subject: options.subject,
-        text: options.text || '',
-        html: options.html,
-      };
+    const msg = {
+      to: options.to,
+      from: process.env.SENDGRID_FROM_EMAIL || process.env.FROM_EMAIL || 'noreply@example.com',
+      subject: options.subject,
+      text: options.text || '',
+      html: options.html,
+    };
 
+    try {
       await sgMail.send(msg);
       log.info('Email sent successfully', { to: options.to });
     } catch (error: any) {
