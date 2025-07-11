@@ -40,11 +40,15 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
     );
 
     // Set cookie
+    const isProduction = process.env.NODE_ENV === 'production';
+    console.log('[Admin Login] Setting cookie, isProduction:', isProduction);
+    
     res.cookie('adminToken', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProduction,
+      sameSite: 'lax', // laxに変更してクロスオリジンでも動作するように
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      // domainは指定しない（同一オリジンで動作）
     });
 
     res.json({
