@@ -157,7 +157,7 @@ function simulateKakoPrediction(historicalData: DrawResult[]): string[] {
     for (let j = 0; j < 4 && predictions.size < 10; j++) {
       if (i !== j) {
         [mixed[i], mixed[j]] = [mixed[j], mixed[i]];
-        predictions.add(mixed[3] + mixed[2] + mixed[1] + mixed[0]);
+        predictions.add(mixed[3]! + mixed[2]! + mixed[1]! + mixed[0]!);
       }
     }
   }
@@ -252,21 +252,21 @@ function validateKakoPredictions() {
   const digitFreq: Array<Record<string, number>> = [{}, {}, {}, {}];
   for (let i = 0; i < 4; i++) {
     for (let j = 0; j <= 9; j++) {
-      digitFreq[i][j.toString()] = 0;
+      digitFreq[i]![j.toString()] = 0;
     }
   }
   
   latestHistorical.forEach(result => {
     const number = result.winningNumber.padStart(4, '0');
     for (let i = 0; i < 4; i++) {
-      const digit = number[3 - i];
-      digitFreq[i][digit] = (digitFreq[i][digit] || 0) + 1;
+      const digit = number[3 - i]!;
+      digitFreq[i]![digit] = (digitFreq[i]![digit] || 0) + 1;
     }
   });
 
   for (let i = 0; i < 4; i++) {
     const position = ['1の位', '10の位', '100の位', '1000の位'][i];
-    const sorted = Object.entries(digitFreq[i])
+    const sorted = Object.entries(digitFreq[i]!)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 3);
     console.log(`${position}: ${sorted.map(([d, c]) => `${d}(${c}回)`).join(', ')}`);

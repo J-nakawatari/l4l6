@@ -44,7 +44,7 @@ async function simulateKakoPrediction(beforeDrawNumber: number): Promise<string[
   for (let i = 0; i < 4; i++) {
     for (let j = 0; j <= 9; j++) {
       if (digitFrequency[i]) {
-        digitFrequency[i][j.toString()] = 0;
+        digitFrequency[i]![j.toString()] = 0;
       }
     }
   }
@@ -56,7 +56,7 @@ async function simulateKakoPrediction(beforeDrawNumber: number): Promise<string[
     for (let i = 0; i < 4; i++) {
       const digit = number[3 - i]; // 右から数える（1の位から）
       if (digitFrequency[i] && digit !== undefined) {
-        digitFrequency[i][digit] = (digitFrequency[i][digit] ?? 0) + 1;
+        digitFrequency[i]![digit] = (digitFrequency[i]![digit] ?? 0) + 1;
       }
     }
   });

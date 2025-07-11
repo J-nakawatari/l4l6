@@ -40,7 +40,7 @@ function analyzeDigitFrequency(data: DrawResult[]) {
   // Initialize
   for (let i = 0; i < 4; i++) {
     for (let j = 0; j <= 9; j++) {
-      digitFrequency[i][j.toString()] = 0;
+      digitFrequency[i]![j.toString()] = 0;
     }
   }
   
@@ -48,8 +48,8 @@ function analyzeDigitFrequency(data: DrawResult[]) {
   data.forEach(result => {
     const number = result.winningNumber.padStart(4, '0');
     for (let i = 0; i < 4; i++) {
-      const digit = number[3 - i]; // Count from right (ones place first)
-      digitFrequency[i][digit] = (digitFrequency[i][digit] || 0) + 1;
+      const digit = number[3 - i]!; // Count from right (ones place first)
+      digitFrequency[i]![digit] = (digitFrequency[i]![digit] || 0) + 1;
     }
   });
   
