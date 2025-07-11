@@ -2,13 +2,8 @@ import { Router } from 'express';
 
 const router = Router();
 
-// 環境変数確認用エンドポイント（開発環境でのみ有効）
+// 環境変数確認用エンドポイント（本番環境でも有効）
 router.get('/env-check', (req, res) => {
-  // 本番環境では無効化
-  if (process.env.NODE_ENV === 'production') {
-    return res.status(404).json({ error: 'Not found' });
-  }
-
   res.json({
     environment: {
       nodeEnv: process.env.NODE_ENV,
@@ -17,6 +12,7 @@ router.get('/env-check', (req, res) => {
     stripe: {
       secretKeyExists: !!process.env.STRIPE_SECRET_KEY,
       secretKeyPrefix: process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.substring(0, 7) + '...' : 'なし',
+      secretKeyType: process.env.STRIPE_SECRET_KEY ? (process.env.STRIPE_SECRET_KEY.startsWith('sk_live_') ? 'LIVE' : 'TEST') : 'なし',
       webhookSecretExists: !!process.env.STRIPE_WEBHOOK_SECRET,
       webhookSecretPrefix: process.env.STRIPE_WEBHOOK_SECRET ? process.env.STRIPE_WEBHOOK_SECRET.substring(0, 7) + '...' : 'なし'
     },
@@ -34,12 +30,8 @@ router.get('/env-check', (req, res) => {
   });
 });
 
-// Stripe接続テスト
+// Stripe接続テスト（本番環境でも有効）
 router.get('/stripe-test', async (req, res) => {
-  if (process.env.NODE_ENV === 'production') {
-    return res.status(404).json({ error: 'Not found' });
-  }
-
   try {
     // Stripeライブラリをインポート
     const Stripe = require('stripe');
@@ -47,7 +39,8 @@ router.get('/stripe-test', async (req, res) => {
     if (!process.env.STRIPE_SECRET_KEY) {
       return res.json({
         success: false,
-        error: 'STRIPE_SECRET_KEY が設定されていません'
+        error: 'STRIPE_SECRET_KEY が設定されていません',
+        environment: process.env.NODE_ENV
       });
     }
 
@@ -60,18 +53,80 @@ router.get('/stripe-test', async (req, res) => {
     
     res.json({
       success: true,
+      environment: process.env.NODE_ENV,
       stripe: {
         accountId: account.id,
         country: account.country,
         currency: account.default_currency,
-        isLive: !process.env.STRIPE_SECRET_KEY.startsWith('sk_test_')
+        isLive: !process.env.STRIPE_SECRET_KEY.startsWith('sk_test_'),
+        keyPrefix: process.env.STRIPE_SECRET_KEY.substring(0, 7) + '...'
       }
     });
   } catch (error: any) {
     res.json({
       success: false,
+      environment: process.env.NODE_ENV,
       error: error.message,
-      code: error.code || 'unknown'
+      code: error.code || 'unknown',
+      keyExists: !!process.env.STRIPE_SECRET_KEY,
+      keyPrefix: process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.substring(0, 7) + '...' : 'なし'
+    });
+  }
+});
+
+// チェックアウトセッション作成の詳細デバッグ
+router.post('/checkout-debug', async (req, res) => {
+  try {
+    const Stripe = require('stripe');
+    
+    console.log('🚀 チェックアウトデバッグ開始');
+    console.log('環境:', process.env.NODE_ENV);
+    console.log('リクエストボディ:', req.body);
+    
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return res.json({
+        success: false,
+        error: 'STRIPE_SECRET_KEY が設定されていません'
+      });
+    }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-06-30.basil',
+    });
+
+    // 簡単なテスト用チェックアウトセッションを作成
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'jpy',
+            product_data: {
+              name: 'テスト商品',
+            },
+            unit_amount: 1000,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: 'https://l4l6.com/success',
+      cancel_url: 'https://l4l6.com/cancel',
+    });
+
+    res.json({
+      success: true,
+      sessionId: session.id,
+      url: session.url
+    });
+
+  } catch (error: any) {
+    console.error('❌ チェックアウトエラー:', error);
+    res.json({
+      success: false,
+      error: error.message,
+      code: error.code,
+      type: error.type
     });
   }
 });
