@@ -69,7 +69,7 @@ export default function SubscriptionPage() {
               const priceData = await response.json();
               return {
                 ...plan,
-                price: priceData.amount ? priceData.amount / 100 : plan.price, // Stripeは金額をセントで返すので100で割る
+                price: priceData.amount || plan.price, // 日本円はそのまま使用
               };
             }
           } catch (error) {
