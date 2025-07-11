@@ -3,6 +3,7 @@ import app from '../src/app';
 import { connectTestDB, closeTestDB, clearTestDB } from './helpers/db';
 import { User } from '../src/models/User';
 import { Admin } from '../src/models/Admin';
+import { Prediction } from '../src/models/Prediction';
 
 beforeAll(async () => {
   await connectTestDB();
@@ -144,6 +145,25 @@ describe('必要最低限のテスト', () => {
         password: 'UserPass123!',
         name: 'ユーザー',
         emailVerified: true,
+        subscription: {
+          status: 'active',
+          planId: 'basic',
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30日後
+        },
+      });
+
+      // テスト用の予想データを作成
+      await Prediction.create({
+        drawNumber: 9999,
+        drawDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // 明日
+        numbers: [1, 2, 3, 4],
+        algorithms: {
+          markov: { numbers: [1, 2, 3, 4], confidence: 0.8 },
+          correlation: { numbers: [1, 2, 3, 4], confidence: 0.7 },
+          fourier: { numbers: [1, 2, 3, 4], confidence: 0.6 },
+          neural: { numbers: [1, 2, 3, 4], confidence: 0.9 },
+        },
+        confidence: 0.75,
       });
 
       const loginResponse = await request(app)
@@ -154,14 +174,20 @@ describe('必要最低限のテスト', () => {
         });
 
       // Cookieを取得
-      const cookies = loginResponse.headers['set-cookie'];
-      if (!cookies || cookies.length === 0) {
+      const setCookieHeader = loginResponse.headers['set-cookie'];
+      let cookieString = '';
+      
+      if (Array.isArray(setCookieHeader)) {
+        cookieString = setCookieHeader[0];
+      } else if (typeof setCookieHeader === 'string') {
+        cookieString = setCookieHeader;
+      } else {
         throw new Error('No cookies received from login response');
       }
       
       const response = await request(app)
         .get('/api/v1/predictions/latest')
-        .set('Cookie', cookies[0]);
+        .set('Cookie', cookieString);
 
       expect(response.status).toBe(200);
     });
