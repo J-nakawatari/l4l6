@@ -79,9 +79,26 @@ router.get('/price-info/:priceId', async (req, res): Promise<void> => {
 // チェックアウトセッション作成
 router.post('/create-checkout-session', authMiddleware, async (req: any, res): Promise<void> => {
   try {
+    // === 本番環境用詳細ログ開始 ===
+    console.log('🚀 チェックアウトセッション作成開始 [本番環境]');
+    console.log('タイムスタンプ:', new Date().toISOString());
+    console.log('リクエストボディ:', JSON.stringify(req.body, null, 2));
+    console.log('ユーザー情報:', {
+      userId: req.user?._id,
+      email: req.user?.email,
+      emailVerified: req.user?.emailVerified
+    });
+    console.log('環境変数チェック:', {
+      stripeKeyExists: !!process.env.STRIPE_SECRET_KEY,
+      stripeKeyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 12),
+      frontendUrl: process.env.FRONTEND_URL
+    });
+    // === 本番環境用詳細ログ終了 ===
+    
     const { planId, billingPeriod, priceId } = req.body;
     
     if (!req.user) {
+      console.log('❌ ユーザー認証エラー');
       res.status(401).json({ error: 'User not authenticated' });
       return;
     }
@@ -89,25 +106,39 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
     const userId = req.user._id;
     const userEmail = req.user.email;
 
+    console.log('✅ ユーザー認証成功:', { userId, userEmail });
+
     // 既存のサブスクリプションをチェック
     const user = await User.findById(userId);
+    console.log('📊 ユーザー情報取得:', {
+      userFound: !!user,
+      subscriptionStatus: user?.subscription?.status,
+      emailVerified: user?.emailVerified
+    });
+
     if (user?.subscription?.status === 'active') {
+      console.log('❌ 既にアクティブなサブスクリプション存在');
       res.status(400).json({ error: { code: 'ALREADY_SUBSCRIBED', message: 'Already have an active subscription' } });
       return;
     }
 
     // メール確認をチェック
     if (!user?.emailVerified) {
+      console.log('❌ メール未確認');
       res.status(403).json({ error: { code: 'EMAIL_NOT_VERIFIED', message: 'Please verify your email first' } });
       return;
     }
+
+    console.log('✅ 事前チェック完了');
 
     let lineItems;
     
     // priceIdが提供された場合は既存の価格IDを使用
     if (priceId) {
+      console.log('💰 priceId使用:', priceId);
       // 有効な価格IDのパターンをチェック（price_で始まる）
       if (!priceId.startsWith('price_')) {
+        console.log('❌ 無効なpriceID形式:', priceId);
         res.status(400).json({ error: { code: 'INVALID_PRICE_ID', message: 'Invalid price ID format' } });
         return;
       }
@@ -118,13 +149,17 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
         },
       ];
     } else {
+      console.log('📋 プラン情報から作成:', { planId, billingPeriod });
+      
       // プランとbillingPeriodの検証
       if (!PLANS[planId as keyof typeof PLANS]) {
+        console.log('❌ 無効なプランID:', planId);
         res.status(400).json({ error: 'Invalid plan ID' });
         return;
       }
 
       if (billingPeriod !== 'monthly' && billingPeriod !== 'yearly') {
+        console.log('❌ 無効な請求期間:', billingPeriod);
         res.status(400).json({ error: 'Invalid billing period' });
         return;
       }
@@ -133,6 +168,7 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
       const planInfo = plan[billingPeriod as keyof typeof plan];
       
       if (!planInfo) {
+        console.log('❌ 無効なプラン設定:', { planId, billingPeriod });
         res.status(400).json({ error: 'Invalid plan configuration' });
         return;
       }
@@ -155,8 +191,11 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
       ];
     }
 
+    console.log('💳 Line items準備完了:', JSON.stringify(lineItems, null, 2));
+
     // 開発・テスト環境では即座にサブスクリプションを有効化（一時的な対応）
     if ((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') && process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_dummy')) {
+      console.log('🧪 テスト環境: ダミーセッション作成');
       const expiresAt = new Date();
       expiresAt.setMonth(expiresAt.getMonth() + 1);
 
@@ -176,6 +215,8 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
       return;
     }
 
+    console.log('🔥 Stripe チェックアウトセッション作成開始');
+
     // チェックアウトセッションを作成
     const session = await getStripe().checkout.sessions.create({
       payment_method_types: ['card'],
@@ -191,10 +232,29 @@ router.post('/create-checkout-session', authMiddleware, async (req: any, res): P
       },
     });
 
+    console.log('✅ チェックアウトセッション作成成功:', {
+      sessionId: session.id,
+      url: session.url ? '存在' : '不存在'
+    });
+
     res.json({ url: session.url });
   } catch (error) {
+    // === 本番環境用詳細エラーログ ===
+    console.error('❌ チェックアウトセッション作成エラー [詳細]:', {
+      message: error.message,
+      type: error.type,
+      code: error.code,
+      statusCode: error.statusCode,
+      raw: error.raw,
+      stack: error.stack?.split('\n').slice(0, 5), // スタックトレースの最初の5行のみ
+      timestamp: new Date().toISOString()
+    });
+    
     log.error('Failed to create checkout session', { error });
-    res.status(500).json({ error: 'Failed to create checkout session' });
+    res.status(500).json({ 
+      error: 'Failed to create checkout session',
+      details: process.env.NODE_ENV === 'production' ? error.message : error
+    });
   }
 });
 
